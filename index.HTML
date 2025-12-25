@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Vimshottari Dasha Age Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{
+  background:#0b0f14;
+  color:#f5e9c6;
+  font-family:Segoe UI,Arial,sans-serif;
+  padding:20px;
+}
+h2,h3{
+  color:#facc15;
+  text-shadow:0 0 6px #b45309;
+}
+select,input,button{
+  background:#111827;
+  color:#f5e9c6;
+  border:1px solid #ca8a04;
+  padding:6px 8px;
+  margin:4px;
+  border-radius:6px;
+  font-weight:600;
+}
+button{cursor:pointer}
+button:hover{background:#1f2937}
+hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
+
+.dasha-node{
+  margin-left:14px;
+  border-left:1px solid #7c6f3d;
+  padding-left:8px;
+}
+.dasha-header{
+  cursor:pointer;
+  padding:6px 8px;
+  border-radius:6px;
+}
+.active > .dasha-header:hover{
+  background:inherit !important;
+  color:inherit !important;
+}
+
+/* ===== EGYPTIAN HIGHLIGHTS ===== */
+.active.level-1 > .dasha-header{
+  background:#facc15;color:#1f2937;border:2px solid #ca8a04;box-shadow:0 0 12px #facc15;
+}
+.active.level-2 > .dasha-header{
+  background:#38bdf8;color:#082f49;border:2px solid #0284c7;box-shadow:0 0 10px #38bdf8;
+}
+.active.level-3 > .dasha-header{
+  background:#4ade80;color:#052e16;border:2px solid #16a34a;box-shadow:0 0 10px #4ade80;
+}
+.active.level-4 > .dasha-header{
+  background:#fbbf24;color:#422006;border:2px solid #d97706;
+}
+.active.level-5 > .dasha-header{
+  background:#eab308;color:#422006;border:2px solid #a16207;
+}
+.small{font-size:13px;opacity:.9}
+.age-box{
+  margin-left:10px;
+  font-weight:700;
+  color:#4ade80;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Vimshottari Dasha Age Calculator</h2>
+
+<div>
+  <label>Birth Date (Pivot):</label>
+  <input type="date" id="birthDate">
+
+  <label>Dasha Start Planet:</label>
+  <select id="startPlanet">
+    <option>Ketu</option><option>Venus</option><option>Surya</option>
+    <option>Chandra</option><option>Mangala</option><option>Rahu</option>
+    <option>Jupiter</option><option>Saturn</option><option>Budha</option>
+  </select>
+
+  <label>Dasha Start Date:</label>
+  <input type="date" id="dashaStartDate">
+</div>
+
+<div>
+  <label>Show till:</label>
+  <select id="showTill">
+    <option value="1">Mahadasha</option>
+    <option value="2">Bhukti</option>
+    <option value="3" selected>Antara</option>
+    <option value="4">Sookshma</option>
+    <option value="5">Prana</option>
+  </select>
+
+  <label>
+    <input type="checkbox" id="repeatCycle">
+    Repeat Vimshottari (2 Cycles)
+  </label>
+
+  <button onclick="generate()">Generate</button>
+  <span id="nativeAge" class="age-box"></span>
+</div>
+
+<hr>
+<div id="tree"></div>
+<hr>
+
+<h3>Event Analyzer</h3>
+<div><button onclick="clearAll()">Clear All</button></div>
+<div id="events"></div>
+
+<hr>
+<button onclick="saveJSON()">Save (JSON)</button>
+<button onclick="loadJSON()">Load (JSON)</button>
+
+<script>
+const ORDER=["Ketu","Venus","Surya","Chandra","Mangala","Rahu","Jupiter","Saturn","Budha"];
+const YEARS={Ketu:7,Venus:20,Surya:6,Chandra:10,Mangala:7,Rahu:18,Jupiter:16,Saturn:19,Budha:17};
+const LEVELS=["Mahadasha","Bhukti","Antara","Sookshma","Prana"];
+const MS_YEAR=365.2425*24*60*60*1000;
+
+let lastExpanded=false;
+
+/* ===== CORE FUNCTIONS (UNCHANGED) ===== */
+function addYears(d,y){return new Date(d.getTime()+y*MS_YEAR)}
+function rotate(p){let i=ORDER.indexOf(p);return ORDER.slice(i).concat(ORDER.slice(0,i))}
+function diffYMD(from,to){
+  if(!from||to<from)return "";
+  let d=to-from;
+  let y=Math.floor(d/MS_YEAR);d-=y*MS_YEAR;
+  let m=Math.floor(d/(30.4375*24*60*60*1000));
+  let da=Math.floor((d%(30.4375*24*60*60*1000))/(24*60*60*1000));
+  return `${y} years ${m} months ${da} days`;
+}
+
+/* ===== AGE OF NATIVE ===== */
+function updateNativeAge(){
+  if(!birthDate.value){
+    nativeAge.textContent="";
+    return;
+  }
+  let today=new Date();
+  nativeAge.textContent="Age of Native : "+diffYMD(new Date(birthDate.value), today);
+}
+
+function genLevel(level,start,planet,yrs,max){
+  if(level>max)return[];
+  let arr=[],cur=new Date(start);
+  rotate(planet).forEach(p=>{
+    let y=yrs*(YEARS[p]/120);
+    let end=addYears(cur,y);
+    arr.push({level,planet:p,start:new Date(cur),end:new Date(end),
+      children:genLevel(level+1,cur,p,y,max)});
+    cur=end;
+  });
+  return arr;
+}
+
+function generate(){
+  tree.innerHTML="";
+  updateNativeAge();
+  if(!birthDate.value||!dashaStartDate.value)return;
+  let max=+showTill.value;
+  let cycles=repeatCycle.checked?2:1;
+  let cur=new Date(dashaStartDate.value);
+  for(let c=0;c<cycles;c++){
+    rotate(startPlanet.value).forEach(p=>{
+      let end=addYears(cur,YEARS[p]);
+      tree.appendChild(render({
+        level:1,planet:p,start:new Date(cur),end:new Date(end),
+        children:genLevel(2,cur,p,YEARS[p],max)
+      }));
+      cur=end;
+    });
+  }
+}
+
+function render(n){
+  let w=document.createElement("div");
+  w.className="dasha-node level-"+n.level;
+  w.dataset.s=n.start;w.dataset.e=n.end;w.dataset.l=n.level;
+
+  let h=document.createElement("div");
+  h.className="dasha-header";
+  h.innerHTML=`<b>${LEVELS[n.level-1]} – ${n.planet}</b> |
+  ${n.start.toISOString().slice(0,10)} (Age ${diffYMD(new Date(birthDate.value),n.start)})
+  → ${n.end.toISOString().slice(0,10)} (Age ${diffYMD(new Date(birthDate.value),n.end)})`;
+
+  let c=document.createElement("div");c.style.display="none";
+  n.children.forEach(ch=>c.appendChild(render(ch)));
+
+  h.onclick=()=>{
+    w.classList.toggle("active");
+    c.style.display=w.classList.contains("active")?"block":"none";
+  };
+
+  w.appendChild(h);w.appendChild(c);return w;
+}
+
+/* ===== EVENTS ===== */
+function buildEvents(){
+  let today=new Date().toISOString().slice(0,10);
+  let html=`
+  <div>
+    <button onclick="setToday()">Current Transit</button>
+    <input type="date" id="ed0" value="${today}">
+    <button onclick="findEvent(0)">Find</button>
+    <span id="er0" class="small"></span>
+  </div>`;
+  for(let i=1;i<=5;i++){
+    html+=`
+    <div>
+      <input id="en${i}" placeholder="Event name">
+      <input type="date" id="ed${i}">
+      <button onclick="findEvent(${i})">Find</button>
+      <span id="er${i}" class="small"></span>
+    </div>`;
+  }
+  events.innerHTML=html;
+}
+buildEvents();
+setToday();
+
+function setToday(){
+  document.getElementById("ed0").value=new Date().toISOString().slice(0,10);
+}
+
+function findEvent(i){
+  let r=document.getElementById(`er${i}`);
+
+  if(lastExpanded){
+    document.querySelectorAll(".active").forEach(a=>a.classList.remove("active"));
+    document.querySelectorAll(".dasha-node > div:nth-child(2)").forEach(d=>d.style.display="none");
+    r.textContent="";
+    lastExpanded=false;
+    return;
+  }
+
+  let d=new Date(document.getElementById(`ed${i}`).value);
+  let nodes=[...document.querySelectorAll(".dasha-node")]
+    .filter(n=>d>=new Date(n.dataset.s)&&d<new Date(n.dataset.e))
+    .sort((a,b)=>a.dataset.l-b.dataset.l);
+
+  nodes.forEach(n=>{
+    n.classList.add("active");
+    n.children[1].style.display="block";
+  });
+
+  r.textContent=nodes.map(n=>n.querySelector("b").textContent.split(" – ").pop()).join(" – ");
+  lastExpanded=true;
+}
+
+/* ===== CLEAR ===== */
+function clearAll(){
+  if(!confirm("This will clear the entire app. Continue?"))return;
+  tree.innerHTML="";
+  document.querySelectorAll(".active").forEach(a=>a.classList.remove("active"));
+  document.querySelectorAll(".small").forEach(s=>s.textContent="");
+  document.querySelectorAll("input").forEach(i=>i.value="");
+  nativeAge.textContent="";
+  lastExpanded=false;
+}
+
+/* ===== SAVE / LOAD (EVENTS INCLUDED) ===== */
+function saveJSON(){
+  let eventsData=[];
+  for(let i=0;i<=5;i++){
+    eventsData.push({
+      name:document.getElementById(`en${i}`)?.value||"",
+      date:document.getElementById(`ed${i}`)?.value||""
+    });
+  }
+  let data={
+    birthDate:birthDate.value,
+    startPlanet:startPlanet.value,
+    dashaStartDate:dashaStartDate.value,
+    showTill:showTill.value,
+    repeatCycle:repeatCycle.checked,
+    events:eventsData
+  };
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));
+  a.download="vimshottari.json";
+  a.click();
+}
+
+function loadJSON(){
+  let i=document.createElement("input");
+  i.type="file";i.accept="application/json";
+  i.onchange=e=>{
+    let r=new FileReader();
+    r.onload=()=>{
+      let d=JSON.parse(r.result);
+      birthDate.value=d.birthDate;
+      startPlanet.value=d.startPlanet;
+      dashaStartDate.value=d.dashaStartDate;
+      showTill.value=d.showTill;
+      repeatCycle.checked=d.repeatCycle;
+      generate();
+      if(d.events){
+        d.events.forEach((ev,i)=>{
+          if(document.getElementById(`en${i}`))document.getElementById(`en${i}`).value=ev.name;
+          if(document.getElementById(`ed${i}`))document.getElementById(`ed${i}`).value=ev.date;
+        });
+      }
+    };
+    r.readAsText(e.target.files[0]);
+  };
+  i.click();
+}
+</script>
+
+</body>
+</html>
