@@ -26,7 +26,8 @@ This project is built as a **pure HTML + CSS + JavaScript** application and runs
 ## 🖥️ Live Demo
 
 👉 GitHub Pages:  
-https://donniedarsshan.github.io/vimshottari-dasha-age-calculator/
+
+(https://donniedarsshan.github.io/vimshottari-dasha-age-calculator/)
 
 
 ---
