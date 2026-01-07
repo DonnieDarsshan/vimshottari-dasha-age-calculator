@@ -77,6 +77,22 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
   <label>Birth Date (Pivot):</label>
   <input type="date" id="birthDate">
 
+<label>Vimshottari Anchor:</label>
+<select id="anchorBody" onchange="applyAnchor()">
+  <option value="">None</option>
+  <option value="Lagna">Lagna</option>
+  <option value="Surya">Surya</option>
+  <option value="Chandra">Chandra</option>
+  <option value="Mangala">Mangala</option>
+  <option value="Budha">Budha</option>
+  <option value="Jupiter">Jupiter</option>
+  <option value="Venus">Venus</option>
+  <option value="Saturn">Saturn</option>
+  <option value="Rahu">Rahu</option>
+</select>
+
+
+
   <label>Dasha Start Planet:</label>
   <select id="startPlanet">
     <option>Ketu</option><option>Venus</option><option>Surya</option>
@@ -118,6 +134,7 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 <hr>
 <button onclick="saveJSON()">Save (JSON)</button>
 <button onclick="loadJSON()">Load (JSON)</button>
+<button onclick="loadSwiss()">Load Swiss (JSON)</button>
 
 <script>
 const ORDER=["Ketu","Venus","Surya","Chandra","Mangala","Rahu","Jupiter","Saturn","Budha"];
@@ -179,6 +196,8 @@ function generate(){
       cur=end;
     });
   }
+    setManualMode(true);
+
 }
 
 function render(n){
@@ -315,6 +334,161 @@ function loadJSON(){
   i.click();
 }
 </script>
+
+
+
+
+
+<script>
+/* ===== SWISS EPHEMERIS LOADER ===== */
+const NAK_PLANETS=[
+  "Ketu","Venus","Surya","Chandra","Mangala",
+  "Rahu","Jupiter","Saturn","Budha"
+];
+
+function moonToDasha(moonDeg){
+  let nak=Math.floor(moonDeg/(13.3333333333));
+  return NAK_PLANETS[nak%9];
+}
+
+function loadSwiss(){
+  let i=document.createElement("input");
+  i.type="file";
+  i.accept="application/json";
+
+  i.onchange=e=>{
+    let r=new FileReader();
+    r.onload=()=>{
+      let d=JSON.parse(r.result);
+
+      /* --- DATE FROM SWISS --- */
+      if(d.meta?.datetime_utc){
+        let dt=d.meta.datetime_utc.slice(0,10);
+        birthDate.value=dt;
+      }
+
+      /* --- STORE DEGREES FOR ANCHOR --- */
+            if(d.lagna!=null) BODY_DEGREE_MAP.Lagna=d.lagna;
+      if(d.planets){
+        Object.keys(d.planets).forEach(p=>{
+          BODY_DEGREE_MAP[p]=d.planets[p];
+        });
+      }
+
+      /* --- DEFAULT: DO NOT FORCE DASHA START DATE --- */
+      if(anchorBody.value){
+        applyAnchor();
+      }
+
+      generate();
+    };
+    r.readAsText(e.target.files[0]);
+  };
+  i.click();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ===== VIMSHOTTARI ANCHOR LOGIC ===== */
+
+let BODY_DEGREE_MAP={}; // filled by Swiss load
+
+
+function setManualMode(isManual){
+  startPlanet.disabled = !isManual;
+  dashaStartDate.disabled = !isManual;
+
+  startPlanet.style.opacity = isManual ? "1" : "0.6";
+  dashaStartDate.style.opacity = isManual ? "1" : "0.6";
+}
+
+
+function nakIndex(deg){
+  return Math.floor(deg / 13.3333333333);
+}
+
+function nakLord(deg){
+  return ORDER[nakIndex(deg) % 9];
+}
+
+function dashaElapsedYears(deg){
+  let frac = (deg % 13.3333333333) / 13.3333333333;
+  let lord = nakLord(deg);
+  return YEARS[lord] * frac;
+}
+
+
+function applyAnchor(){
+
+  /* MANUAL MODE */
+  if(!anchorBody.value){
+    setManualMode(true);
+    return;
+  }
+
+  /* AUTO MODE */
+  if(!birthDate.value) return;
+  setManualMode(false);
+
+  let deg = BODY_DEGREE_MAP[anchorBody.value];
+  if(deg == null) return;
+
+  let lord = nakLord(deg);
+  startPlanet.value = lord;
+
+let elapsedYears = dashaElapsedYears(deg);
+let start = new Date(birthDate.value);
+start = new Date(start.getTime() - elapsedYears * MS_YEAR);
+dashaStartDate.value = start.toISOString().slice(0,10);
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 </body>
 </html>
