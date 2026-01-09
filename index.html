@@ -100,6 +100,15 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 
 
 
+/* ===== FIX SYMBOL ALIGNMENT (GLOBAL) ===== */
+.dasha-header{
+  grid-template-columns: 26px 190px 1fr;
+}
+
+.dasha-symbol{
+  text-align:center;
+  font-weight:700;
+}
 
 
 
@@ -123,7 +132,6 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 
 <label>Vimshottari Anchor:</label>
 <select id="anchorBody" onchange="applyAnchor()">
-  <option value="">None</option>
   <option value="Chandra" selected>Chandra</option>
   <option value="Lagna">Lagna</option>
   <option value="Surya">Surya</option>
@@ -133,6 +141,7 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
   <option value="Venus">Venus</option>
   <option value="Saturn">Saturn</option>
   <option value="Rahu">Rahu</option>
+  <option value="Ketu">Ketu</option>
 </select>
 
 
@@ -619,6 +628,26 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 const ORDER=["Ketu","Venus","Surya","Chandra","Mangala","Rahu","Jupiter","Saturn","Budha"];
 const YEARS={Ketu:7,Venus:20,Surya:6,Chandra:10,Mangala:7,Rahu:18,Jupiter:16,Saturn:19,Budha:17};
 const LEVELS=["Mahadasha","Bhukti","Antara","Sookshma","Prana"];
+const LEVEL_SYMBOL = {
+  1: "⭐",
+  2: "▶",
+  3: "◆",
+  4: "»",
+  5: "•"
+};
+
+function isTodayInRange(start, end){
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  return today >= new Date(start) && today < new Date(end);
+}
+
+function levelPrefix(level, start, end){
+  return isTodayInRange(start, end)
+    ? `<span class="dasha-symbol">${LEVEL_SYMBOL[level]}</span>`
+    : `<span class="dasha-symbol"></span>`;
+}
+
 const MS_YEAR = 365.25*24*60*60*1000;
 
 
@@ -860,8 +889,10 @@ function render(n){
 
   let ageEnd   = hideAge ? "" : ` (Age ${diffYMD(new Date(birthDate.value),n.end)})`;
 
-  h.innerHTML = `<b>${LEVELS[n.level-1]} – ${n.planet}</b> |
-	${startDate}${ageStart} →→→→ ${endDate}${ageEnd}`;
+  h.innerHTML =
+  `${levelPrefix(n.level,n.start,n.end)}` +
+  `<b>${LEVELS[n.level-1]} – ${n.planet}</b> | ` +
+  `${startDate}${ageStart} →→→→ ${endDate}${ageEnd}`;
 
 
 
@@ -1484,6 +1515,7 @@ if(!document.getElementById("cmpHideAge")?.checked){
 
 
   h.innerHTML =
+  `${levelPrefix(n.level,n.start,n.end)}` +
   `<b>${LEVELS[n.level-1]} – ${n.planet}</b> | ` +
   `${fmtCmpDate(n.start)}${startAge} → ${fmtCmpDate(n.end)}${endAge}`;
 
@@ -1707,6 +1739,7 @@ function fmt(d){
   }
 
   h.innerHTML =
+  `${levelPrefix(n.level,n.start,n.end)}` +
   `<b>${n.name} { ${n.lord} }</b> | ` +
   `${fmt(n.start)}${startAge} → ${fmt(n.end)}${endAge}`;
 
@@ -2078,6 +2111,7 @@ function renderYoginiNode(n){
 
 
   h.innerHTML =
+  `${levelPrefix(n.level,n.start,n.end)}` +
   `<b>${n.name} { ${n.lord} }</b> ` +
   `${fmt(n.start)}${yogAge(n.start)} →→→→ ${fmt(n.end)}${yogAge(n.end)}`;
 
