@@ -5,6 +5,11 @@
 <title>Vimshottari Dasha Age Calculator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+
+
+
+
+
 <style>
 body{
   background:#0b0f14;
@@ -73,6 +78,12 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 
 <h2>Vimshottari Dasha Age Calculator</h2>
 
+<hr>
+<button onclick="saveJSON()">Save (JSON)</button>
+<button onclick="loadJSON()">Load (JSON)</button>
+<button onclick="loadSwiss()">Load Swiss (JSON)</button>
+
+
 <div>
   <label>Birth Date (Pivot):</label>
   <input type="date" id="birthDate">
@@ -82,7 +93,7 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
   <option value="">None</option>
   <option value="Lagna">Lagna</option>
   <option value="Surya">Surya</option>
-  <option value="Chandra">Chandra</option>
+<option value="Chandra" selected>Chandra</option>
   <option value="Mangala">Mangala</option>
   <option value="Budha">Budha</option>
   <option value="Jupiter">Jupiter</option>
@@ -92,31 +103,78 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 </select>
 
 
+<label>Ayanamsha:</label>
+<select id="ayanamsha">
+  <option value="lahiri" selected>Lahiri</option>
+  <option value="raman">Raman</option>
+  <option value="kp">KP (New)</option>
+</select>
+
+
+
+</div>
+
+<!-- ================= SECOND ROW ================= -->
+<div style="margin-top:10px">
+
+
+
+
+
 
   <label>Dasha Start Planet:</label>
   <select id="startPlanet">
-    <option>Ketu</option><option>Venus</option><option>Surya</option>
-    <option>Chandra</option><option>Mangala</option><option>Rahu</option>
-    <option>Jupiter</option><option>Saturn</option><option>Budha</option>
+	<option>Ketu</option><option>Venus</option><option>Surya</option>
+	<option>Chandra</option><option>Mangala</option><option>Rahu</option>
+	<option>Jupiter</option><option>Saturn</option><option>Budha</option>
   </select>
 
   <label>Dasha Start Date:</label>
   <input type="date" id="dashaStartDate">
+
+<label>
+  <input type="checkbox" id="hideDates" checked>
+  Hide Dates
+</label>
+
+<label>
+  <input type="checkbox" id="hideMonthDay">
+  Hide Date & Month
+</label>
+
+<label>
+  <input type="checkbox" id="hideAge">
+  Hide Age
+</label>
+
+
+<label>
+  <input type="checkbox" id="hideAgeMD" checked>
+  Hide Age Month + Days
+</label>
+
+
+
+
 </div>
+
+
+
+
 
 <div>
   <label>Show till:</label>
   <select id="showTill">
-    <option value="1">Mahadasha</option>
-    <option value="2">Bhukti</option>
-    <option value="3" selected>Antara</option>
-    <option value="4">Sookshma</option>
-    <option value="5">Prana</option>
+	<option value="1">Mahadasha</option>
+	<option value="2"selected>Bhukti</option>
+	<option value="3" >Antara</option>
+	<option value="4">Sookshma</option>
+	<option value="5">Prana</option>
   </select>
 
   <label>
-    <input type="checkbox" id="repeatCycle">
-    Repeat Vimshottari (2 Cycles)
+	<input type="checkbox" id="repeatCycle">
+	Repeat Vimshottari (2 Cycles)
   </label>
 
   <button onclick="generate()">Generate</button>
@@ -131,36 +189,454 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 <div><button onclick="clearAll()">Clear All</button></div>
 <div id="events"></div>
 
+
+
 <hr>
-<button onclick="saveJSON()">Save (JSON)</button>
-<button onclick="loadJSON()">Load (JSON)</button>
-<button onclick="loadSwiss()">Load Swiss (JSON)</button>
+
+<h3>Vimshottari Dasha Comparator</h3>
+
+<div style="margin-bottom:8px">
+  <label>
+    <input type="checkbox" id="cmpHideDates" checked onchange="rebuildComparator()">
+    Hide Dates
+  </label>
+
+  <label style="margin-left:12px">
+    <input type="checkbox" id="cmpHideMonthDay" onchange="rebuildComparator()">
+    Hide Date & Month
+  </label>
+
+  <label style="margin-left:12px">
+    <input type="checkbox" id="cmpHideAge" onchange="rebuildComparator()">
+    Hide Age
+  </label>
+</div>
+
+
+
+
+
+
+
+<div style="margin-bottom:10px">
+  <button onclick="setCmpToday()">Current Transit</button>
+  <input type="date" id="cmpEventDate">
+  <button onclick="findCmpTransit()">Find</button>
+  <span id="cmpEventResult" class="small"></span>
+</div>
+
+
+
+
+
+<style>
+#compareWrap{
+  display:flex;
+  gap:16px;
+}
+.compareBox{
+  flex:1;
+  border:1px solid #ca8a04;
+  border-radius:8px;
+  padding:10px;
+  background:#0f172a;
+}
+.compareBox select{
+  width:100%;
+  margin-bottom:8px;
+}
+.compareTree .dasha-node{
+  margin-left:12px;
+  border-left:1px solid #7c6f3d;
+  padding-left:8px;
+}
+.compareTree .dasha-header{
+  cursor:pointer;
+  padding:4px 6px;
+  border-radius:6px;
+}
+/* ===== COMPARATOR LEVEL COLORS ===== */
+.compareTree .level-1.active > .dasha-header{
+  background:#facc15;
+  color:#1f2937;
+  border:2px solid #ca8a04;
+  box-shadow:0 0 10px #facc15;
+}
+.compareTree .level-2.active > .dasha-header{
+  background:#38bdf8;
+  color:#082f49;
+  border:2px solid #0284c7;
+  box-shadow:0 0 8px #38bdf8;
+}
+.compareTree .level-3.active > .dasha-header{
+  background:#4ade80;
+  color:#052e16;
+  border:2px solid #16a34a;
+  box-shadow:0 0 8px #4ade80;
+}
+.compareTree .level-4.active > .dasha-header{
+  background:#fb923c;
+  color:#431407;
+  border:2px solid #ea580c;
+}
+.compareTree .level-5.active > .dasha-header{
+  background:#c084fc;
+  color:#2e1065;
+  border:2px solid #9333ea;
+}
+
+
+
+
+
+
+
+
+
+
+
+/* ===== YOGINI DASH A COLORS (UNIQUE) ===== */
+
+.yogini .level-1.active > .dasha-header{
+  background:#7f1d1d;
+  color:#fff;
+  border:2px solid #991b1b;
+  box-shadow:0 0 10px #7f1d1d;
+}
+
+.yogini .level-2.active > .dasha-header{
+  background:#312e81;
+  color:#e0e7ff;
+  border:2px solid #4338ca;
+  box-shadow:0 0 10px #312e81;
+}
+
+.yogini .level-3.active > .dasha-header{
+  background:#064e3b;
+  color:#d1fae5;
+  border:2px solid #059669;
+  box-shadow:0 0 10px #064e3b;
+}
+
+.yogini .level-4.active > .dasha-header{
+  background:#7c2d12;
+  color:#ffedd5;
+  border:2px solid #c2410c;
+}
+
+.yogini .level-5.active > .dasha-header{
+  background:#581c87;
+  color:#f5d0fe;
+  border:2px solid #7e22ce;
+}
+
+
+
+
+
+
+
+</style>
+
+<div id="compareWrap">
+
+  <div class="compareBox">
+	<select id="compareLeftAnchor" onchange="buildCompareTree('left')">
+	  <option value="Lagna" selected>Lagna</option>
+	  <option>Surya</option>
+	  <option>Chandra</option>
+	  <option>Mangala</option>
+	  <option>Budha</option>
+	  <option>Jupiter</option>
+	  <option>Venus</option>
+	  <option>Saturn</option>
+	  <option>Rahu</option>
+	  <option>Ketu</option>
+	</select>
+	<div id="compareLeftTree" class="compareTree"></div>
+  </div>
+
+  <div class="compareBox">
+	<select id="compareRightAnchor" onchange="buildCompareTree('right')">
+	  <option>Lagna</option>
+	  <option>Surya</option>
+	  <option value="Chandra" selected>Chandra</option>
+	  <option>Mangala</option>
+	  <option>Budha</option>
+	  <option>Jupiter</option>
+	  <option>Venus</option>
+	  <option>Saturn</option>
+	  <option>Rahu</option>
+	  <option>Ketu</option>
+	</select>
+	<div id="compareRightTree" class="compareTree"></div>
+  </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+<hr>
+
+<h3>Yogini Dasha Analyzer</h3>
+
+
+
+
+<div style="margin-bottom:10px">
+
+  <button onclick="setYoginiAnalyzerToday()">Current Transit</button>
+
+  <input type="date" id="yoginiAnalyzerDate">
+
+  <button onclick="findYoginiAnalyzer()">Find</button>
+
+  <label style="margin-left:12px">
+    <input type="checkbox" id="yogHideDates" checked onchange="buildYogini()">
+    Hide Dates
+  </label>
+
+  <label>
+    <input type="checkbox" id="yogHideMonthDay" onchange="buildYogini()">
+    Hide Date & Month
+  </label>
+
+  <label>
+    <input type="checkbox" id="yogHideAge" onchange="buildYogini()">
+    Hide Age
+  </label>
+
+  <label>
+    <input type="checkbox" id="yogHideAgeMD" checked onchange="buildYogini()">
+    Hide Age Month + Days
+  </label>
+
+  
+</div>
+
+
+
+
+<div style="margin-bottom:10px">
+
+  <label>Yogini Pivot:</label>
+  <select id="yoginiPivot" onchange="buildYogini()">
+    <option value="Lagna">Lagna</option>
+    <option value="Surya">Surya</option>
+    <option value="Chandra" selected>Chandra</option>
+    <option value="Mangala">Mangala</option>
+    <option value="Budha">Budha</option>
+    <option value="Jupiter">Jupiter</option>
+    <option value="Venus">Venus</option>
+    <option value="Saturn">Saturn</option>
+    <option value="Rahu">Rahu</option>
+    <option value="Ketu">Ketu</option>
+  </select>
+
+  <label style="margin-left:12px">Show Till:</label>
+  <select id="yoginiShowTill" onchange="buildYogini()">
+    <option value="1">Level 1</option>
+    <option value="2" selected>Level 2</option>
+    <option value="3">Level 3</option>
+    <option value="4">Level 4</option>
+    <option value="5">Level 5</option>
+  </select>
+
+</div>
+
+
+
+
+
+<div id="yoginiTree"></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<hr>
+
+<h3>Yogini Dasha Comparator</h3>
+
+
+
+
+
+
+
+
+
+
+<div style="margin-bottom:10px">
+  <button onclick="setYoginiCmpToday()">Current Transit</button>
+
+  <input type="date" id="yogCmpEventDate">
+
+  <button onclick="findYoginiCmpTransit()">Find</button>
+
+  <label style="margin-left:12px">
+    <input type="checkbox" id="yogCmpHideDates" checked onchange="rebuildYoginiComparator()">
+    Hide Dates
+  </label>
+
+  <label>
+    <input type="checkbox" id="yogCmpHideMonthDay" onchange="rebuildYoginiComparator()">
+    Hide Date & Month
+  </label>
+
+  <label>
+    <input type="checkbox" id="yogCmpHideAge" onchange="rebuildYoginiComparator()">
+    Hide Age
+  </label>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div id="yogCompareWrap" style="display:flex;gap:16px">
+
+  <div class="compareBox">
+    <select id="yogCompareLeftAnchor" onchange="rebuildYoginiComparator()">
+	  <option value="Lagna" selected>Lagna</option>
+	  <option>Surya</option>
+	  <option>Chandra</option>
+	  <option>Mangala</option>
+	  <option>Budha</option>
+	  <option>Jupiter</option>
+	  <option>Venus</option>
+	  <option>Saturn</option>
+	  <option>Rahu</option>
+	  <option>Ketu</option>
+	</select>
+
+    <div id="yogCompareLeft" class="compareTree yogini"></div>
+  </div>
+  
+
+ 
+
+  <div class="compareBox">
+    <select id="yogCompareRightAnchor" onchange="rebuildYoginiComparator()">
+	  <option>Lagna</option>
+	  <option>Surya</option>
+	  <option value="Chandra" selected>Chandra</option>
+	  <option>Mangala</option>
+	  <option>Budha</option>
+	  <option>Jupiter</option>
+	  <option>Venus</option>
+	  <option>Saturn</option>
+	  <option>Rahu</option>
+	  <option>Ketu</option>
+	</select>
+
+    <div id="yogCompareRight" class="compareTree yogini"></div>
+  </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <script>
 const ORDER=["Ketu","Venus","Surya","Chandra","Mangala","Rahu","Jupiter","Saturn","Budha"];
 const YEARS={Ketu:7,Venus:20,Surya:6,Chandra:10,Mangala:7,Rahu:18,Jupiter:16,Saturn:19,Budha:17};
 const LEVELS=["Mahadasha","Bhukti","Antara","Sookshma","Prana"];
-const MS_YEAR=365.2425*24*60*60*1000;
+const MS_YEAR = 365.25*24*60*60*1000;
+
 
 let lastExpanded=false;
+
+// ===============================
+// GLOBAL SWISS JSON STORAGE
+// ===============================
+let SWISS_DATA = null; // holds full Swiss ephemeris JSON
+
 
 /* ===== CORE FUNCTIONS (UNCHANGED) ===== */
 function addYears(d,y){return new Date(d.getTime()+y*MS_YEAR)}
 function rotate(p){let i=ORDER.indexOf(p);return ORDER.slice(i).concat(ORDER.slice(0,i))}
+
+
+
+
+
+
+
+
+
 function diffYMD(from,to){
-  if(!from||to<from)return "";
-  let d=to-from;
-  let y=Math.floor(d/MS_YEAR);d-=y*MS_YEAR;
-  let m=Math.floor(d/(30.4375*24*60*60*1000));
-  let da=Math.floor((d%(30.4375*24*60*60*1000))/(24*60*60*1000));
+  if(!from || to < from) return "";
+
+  if(document.getElementById("hideAge")?.checked){
+    return "";
+  }
+
+  let d = to - from;
+  let y = Math.floor(d / MS_YEAR);
+
+  // ✅ Hide Month + Days → YEARS ONLY
+  if(document.getElementById("hideAgeMD")?.checked){
+    return `${y} years`;
+  }
+
+  d -= y * MS_YEAR;
+  let m = Math.floor(d / (30.4375*24*60*60*1000));
+  let da = Math.floor((d % (30.4375*24*60*60*1000))/(24*60*60*1000));
+
   return `${y} years ${m} months ${da} days`;
 }
+
+
+
+
+
+
+
+
 
 /* ===== AGE OF NATIVE ===== */
 function updateNativeAge(){
   if(!birthDate.value){
-    nativeAge.textContent="";
-    return;
+	nativeAge.textContent="";
+	return;
   }
   let today=new Date();
   nativeAge.textContent="Age of Native : "+diffYMD(new Date(birthDate.value), today);
@@ -170,11 +646,11 @@ function genLevel(level,start,planet,yrs,max){
   if(level>max)return[];
   let arr=[],cur=new Date(start);
   rotate(planet).forEach(p=>{
-    let y=yrs*(YEARS[p]/120);
-    let end=addYears(cur,y);
-    arr.push({level,planet:p,start:new Date(cur),end:new Date(end),
-      children:genLevel(level+1,cur,p,y,max)});
-    cur=end;
+	let y=yrs*(YEARS[p]/120);
+	let end=addYears(cur,y);
+	arr.push({level,planet:p,start:new Date(cur),end:new Date(end),
+	  children:genLevel(level+1,cur,p,y,max)});
+	cur=end;
   });
   return arr;
 }
@@ -182,21 +658,28 @@ function genLevel(level,start,planet,yrs,max){
 function generate(){
   tree.innerHTML="";
   updateNativeAge();
-  if(!birthDate.value||!dashaStartDate.value)return;
+  if(!birthDate.value) return;
+
+	if(!dashaStartDate.value){
+	  dashaStartDate.value = birthDate.value;
+	}
   let max=+showTill.value;
   let cycles=repeatCycle.checked?2:1;
   let cur=new Date(dashaStartDate.value);
   for(let c=0;c<cycles;c++){
-    rotate(startPlanet.value).forEach(p=>{
-      let end=addYears(cur,YEARS[p]);
-      tree.appendChild(render({
-        level:1,planet:p,start:new Date(cur),end:new Date(end),
-        children:genLevel(2,cur,p,YEARS[p],max)
-      }));
-      cur=end;
-    });
+	rotate(startPlanet.value).forEach(p=>{
+	  let end=addYears(cur,YEARS[p]);
+	  tree.appendChild(render({
+		level:1,planet:p,start:new Date(cur),end:new Date(end),
+		children:genLevel(2,cur,p,YEARS[p],max)
+	  }));
+	  cur=end;
+	});
   }
-    setManualMode(true);
+	setManualMode(true);
+
+
+
 
 }
 
@@ -207,16 +690,49 @@ function render(n){
 
   let h=document.createElement("div");
   h.className="dasha-header";
-  h.innerHTML=`<b>${LEVELS[n.level-1]} – ${n.planet}</b> |
-  ${n.start.toISOString().slice(0,10)} (Age ${diffYMD(new Date(birthDate.value),n.start)})
-  → ${n.end.toISOString().slice(0,10)} (Age ${diffYMD(new Date(birthDate.value),n.end)})`;
+  let hideDates = document.getElementById("hideDates")?.checked;
+  let hideMonthDay = document.getElementById("hideMonthDay")?.checked;
+  let hideAge = document.getElementById("hideAge")?.checked;
+
+
+
+
+  function formatDate(d){
+
+  // Hide Date & Month → YEAR ONLY
+  if(hideMonthDay){
+	return d.getFullYear();
+  }
+
+  // Hide Date → YEAR + MONTH (no day)
+  if(hideDates){
+	return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0");
+  }
+
+  // Default → FULL DATE
+  return d.toISOString().slice(0,10);
+}
+
+
+
+
+  let startDate = formatDate(n.start);
+  let endDate = formatDate(n.end);
+
+  let ageStart = hideAge ? "" : ` (Age ${diffYMD(new Date(birthDate.value),n.start)})`;
+  let ageEnd   = hideAge ? "" : ` (Age ${diffYMD(new Date(birthDate.value),n.end)})`;
+
+  h.innerHTML = `<b>${LEVELS[n.level-1]} – ${n.planet}</b> |
+	${startDate}${ageStart}
+	→ ${endDate}${ageEnd}`;
+
 
   let c=document.createElement("div");c.style.display="none";
   n.children.forEach(ch=>c.appendChild(render(ch)));
 
   h.onclick=()=>{
-    w.classList.toggle("active");
-    c.style.display=w.classList.contains("active")?"block":"none";
+	w.classList.toggle("active");
+	c.style.display=w.classList.contains("active")?"block":"none";
   };
 
   w.appendChild(h);w.appendChild(c);return w;
@@ -227,53 +743,102 @@ function buildEvents(){
   let today=new Date().toISOString().slice(0,10);
   let html=`
   <div>
-    <button onclick="setToday()">Current Transit</button>
-    <input type="date" id="ed0" value="${today}">
-    <button onclick="findEvent(0)">Find</button>
-    <span id="er0" class="small"></span>
+	<button onclick="setToday()">Current Transit</button>
+	<input type="date" id="ed0" value="${today}">
+	<button onclick="findEvent(0)">Find</button>
+	<span id="er0" class="small"></span>
   </div>`;
   for(let i=1;i<=5;i++){
-    html+=`
-    <div>
-      <input id="en${i}" placeholder="Event name">
-      <input type="date" id="ed${i}">
-      <button onclick="findEvent(${i})">Find</button>
-      <span id="er${i}" class="small"></span>
-    </div>`;
+	html+=`
+	<div>
+	  <input id="en${i}" placeholder="Event name">
+	  <input type="date" id="ed${i}">
+	  <button onclick="findEvent(${i})">Find</button>
+	  <span id="er${i}" class="small"></span>
+	</div>`;
   }
   events.innerHTML=html;
 }
 buildEvents();
+
+["hideDates","hideMonthDay","hideAge","hideAgeMD"].forEach(id=>{
+  document.getElementById(id).onchange = ()=>{
+	if(tree.innerHTML.trim()){
+	  generate();
+	}
+  };
+});
+
+
+
+
+
+showTill.onchange = () => {
+  if(tree.innerHTML.trim()){
+    generate();
+    rebuildComparator();
+  }
+};
+
+
+
 setToday();
 
 function setToday(){
   document.getElementById("ed0").value=new Date().toISOString().slice(0,10);
 }
 
+
+
+
+
+
+
 function findEvent(i){
-  let r=document.getElementById(`er${i}`);
+
+  let r = document.getElementById(`er${i}`);
+
+  // 🔒 ISOLATED TO MAIN VIMSHOTTARI TREE ONLY
+  const scope = document.getElementById("tree");
 
   if(lastExpanded){
-    document.querySelectorAll(".active").forEach(a=>a.classList.remove("active"));
-    document.querySelectorAll(".dasha-node > div:nth-child(2)").forEach(d=>d.style.display="none");
+    scope.querySelectorAll(".active").forEach(a=>a.classList.remove("active"));
+    scope.querySelectorAll(".dasha-node > div:nth-child(2)")
+      .forEach(d=>d.style.display="none");
     r.textContent="";
     lastExpanded=false;
     return;
   }
 
-  let d=new Date(document.getElementById(`ed${i}`).value);
-  let nodes=[...document.querySelectorAll(".dasha-node")]
-    .filter(n=>d>=new Date(n.dataset.s)&&d<new Date(n.dataset.e))
-    .sort((a,b)=>a.dataset.l-b.dataset.l);
+  let d = new Date(document.getElementById(`ed${i}`).value);
+
+  let nodes = [...scope.querySelectorAll(".dasha-node")]
+    .filter(n =>
+      d >= new Date(n.dataset.s) &&
+      d <  new Date(n.dataset.e)
+    )
+    .sort((a,b)=>a.dataset.l - b.dataset.l);
 
   nodes.forEach(n=>{
     n.classList.add("active");
-    n.children[1].style.display="block";
+    if(n.children[1]) n.children[1].style.display="block";
   });
 
-  r.textContent=nodes.map(n=>n.querySelector("b").textContent.split(" – ").pop()).join(" – ");
-  lastExpanded=true;
+  r.textContent =
+    nodes.map(n=>n.querySelector("b").textContent.split(" – ").pop())
+         .join(" – ");
+
+  lastExpanded = true;
 }
+
+
+
+
+
+
+
+
+
 
 /* ===== CLEAR ===== */
 function clearAll(){
@@ -290,18 +855,18 @@ function clearAll(){
 function saveJSON(){
   let eventsData=[];
   for(let i=0;i<=5;i++){
-    eventsData.push({
-      name:document.getElementById(`en${i}`)?.value||"",
-      date:document.getElementById(`ed${i}`)?.value||""
-    });
+	eventsData.push({
+	  name:document.getElementById(`en${i}`)?.value||"",
+	  date:document.getElementById(`ed${i}`)?.value||""
+	});
   }
   let data={
-    birthDate:birthDate.value,
-    startPlanet:startPlanet.value,
-    dashaStartDate:dashaStartDate.value,
-    showTill:showTill.value,
-    repeatCycle:repeatCycle.checked,
-    events:eventsData
+	birthDate:birthDate.value,
+	startPlanet:startPlanet.value,
+	dashaStartDate:dashaStartDate.value,
+	showTill:showTill.value,
+	repeatCycle:repeatCycle.checked,
+	events:eventsData
   };
   let a=document.createElement("a");
   a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));
@@ -313,78 +878,149 @@ function loadJSON(){
   let i=document.createElement("input");
   i.type="file";i.accept="application/json";
   i.onchange=e=>{
-    let r=new FileReader();
-    r.onload=()=>{
-      let d=JSON.parse(r.result);
-      birthDate.value=d.birthDate;
-      startPlanet.value=d.startPlanet;
-      dashaStartDate.value=d.dashaStartDate;
-      showTill.value=d.showTill;
-      repeatCycle.checked=d.repeatCycle;
-      generate();
-      if(d.events){
-        d.events.forEach((ev,i)=>{
-          if(document.getElementById(`en${i}`))document.getElementById(`en${i}`).value=ev.name;
-          if(document.getElementById(`ed${i}`))document.getElementById(`ed${i}`).value=ev.date;
-        });
-      }
-    };
-    r.readAsText(e.target.files[0]);
+	let r=new FileReader();
+	r.onload=()=>{
+	  let d=JSON.parse(r.result);
+	  birthDate.value=d.birthDate;
+	  startPlanet.value=d.startPlanet;
+	  dashaStartDate.value=d.dashaStartDate;
+	  showTill.value=d.showTill;
+	  repeatCycle.checked=d.repeatCycle;
+	  generate();
+	  if(d.events){
+		d.events.forEach((ev,i)=>{
+		  if(document.getElementById(`en${i}`))document.getElementById(`en${i}`).value=ev.name;
+		  if(document.getElementById(`ed${i}`))document.getElementById(`ed${i}`).value=ev.date;
+		});
+	  }
+	};
+	r.readAsText(e.target.files[0]);
   };
   i.click();
 }
+
+
+
+
+
+
+
+
+
+
+
+
 </script>
 
 
 
 
 
+
+
+
+
 <script>
-/* ===== SWISS EPHEMERIS LOADER ===== */
-const NAK_PLANETS=[
-  "Ketu","Venus","Surya","Chandra","Mangala",
-  "Rahu","Jupiter","Saturn","Budha"
-];
 
-function moonToDasha(moonDeg){
-  let nak=Math.floor(moonDeg/(13.3333333333));
-  return NAK_PLANETS[nak%9];
+
+
+
+
+
+
+
+
+
+
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+<script>
+/* =====================================================
+   SWISS EPHEMERIS – CORRECT ORDER
+   ===================================================== */
+
+/* --- DEGREE NORMALIZER --- */
+function normalizeDeg(deg){
+  return ((deg % 360) + 360) % 360;
 }
 
+
+
+/* ===== AYANAMSHA NAME MAP ===== */
+// Maps dropdown value → JSON key
+const AYANAMSHA_JSON_KEY = {
+  lahiri: "Lahiri",
+  raman: "Raman",
+  kp: "KP New"
+};
+
+
+
+/* --- SWISS JSON LOADER --- */
 function loadSwiss(){
-  let i=document.createElement("input");
-  i.type="file";
-  i.accept="application/json";
 
-  i.onchange=e=>{
-    let r=new FileReader();
-    r.onload=()=>{
-      let d=JSON.parse(r.result);
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "application/json";
 
-      /* --- DATE FROM SWISS --- */
-      if(d.meta?.datetime_utc){
-        let dt=d.meta.datetime_utc.slice(0,10);
-        birthDate.value=dt;
-      }
+  input.onchange = e => {
 
-      /* --- STORE DEGREES FOR ANCHOR --- */
-            if(d.lagna!=null) BODY_DEGREE_MAP.Lagna=d.lagna;
-      if(d.planets){
-        Object.keys(d.planets).forEach(p=>{
-          BODY_DEGREE_MAP[p]=d.planets[p];
-        });
-      }
+	const reader = new FileReader();
 
-      /* --- DEFAULT: DO NOT FORCE DASHA START DATE --- */
-      if(anchorBody.value){
-        applyAnchor();
-      }
+	reader.onload = () => {
 
-      generate();
-    };
-    r.readAsText(e.target.files[0]);
+	const data = JSON.parse(reader.result);   // ✅ THIS LINE WAS MISSING
+	SWISS_DATA = data;
+
+
+		// Set birth date
+		if(SWISS_DATA.meta?.datetime_utc){
+		  birthDate.value = SWISS_DATA.meta.datetime_utc.slice(0,10);
+		}
+
+		// Load degrees for selected ayanamsha
+		loadAyanamshaFromSwiss();
+
+		// Apply anchor if selected
+		if(anchorBody.value){
+		  applyAnchor();
+		}else{
+		  setManualMode(true);
+		}
+
+		// Build dasha tree
+		generate();
+		rebuildComparator();
+		updateNativeAge();
+		buildYogini();
+		rebuildYoginiComparator();
+
+
+
+
+			  
+	  
+	  
+	  
+	  
+	  
+	};
+
+	reader.readAsText(e.target.files[0]);
   };
-  i.click();
+
+  input.click();
 }
 
 
@@ -392,16 +1028,68 @@ function loadSwiss(){
 
 
 
+</script>
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+
+
+
+// ==================================================
+// AYANAMSHA → DEGREE LOADER (FROM SWISS JSON)
+// ==================================================
+function loadAyanamshaFromSwiss(){
+
+  if(!SWISS_DATA) return;
+
+  const ayaKey = AYANAMSHA_JSON_KEY[ayanamsha.value];
+  const ayaBlock = SWISS_DATA.ayanamshas?.[ayaKey];
+
+  if(!ayaBlock){
+	alert("Ayanamsha data not found in Swiss JSON");
+	return;
+  }
+
+  // Reset degree maps
+  RAW_DEGREE_MAP = {};
+  BODY_DEGREE_MAP = {};
+
+  // Lagna
+  RAW_DEGREE_MAP.Lagna = normalizeDeg(ayaBlock.lagna);
+
+  // Planets
+  for(const p in ayaBlock.planets){
+	if(ORDER.includes(p)){
+	  RAW_DEGREE_MAP[p] = normalizeDeg(ayaBlock.planets[p]);
+	}
+  }
+
+  // Direct usage (NO OFFSETS)
+  BODY_DEGREE_MAP = { ...RAW_DEGREE_MAP };
+}
 
 
 
 /* ===== VIMSHOTTARI ANCHOR LOGIC ===== */
 
-let BODY_DEGREE_MAP={}; // filled by Swiss load
+let RAW_DEGREE_MAP = {};    // original Swiss (base Lahiri)
+let BODY_DEGREE_MAP = {};  // ayanamsha-adjusted working map
+
 
 
 function setManualMode(isManual){
@@ -432,8 +1120,8 @@ function applyAnchor(){
 
   /* MANUAL MODE */
   if(!anchorBody.value){
-    setManualMode(true);
-    return;
+	setManualMode(true);
+	return;
   }
 
   /* AUTO MODE */
@@ -450,7 +1138,601 @@ let elapsedYears = dashaElapsedYears(deg);
 let start = new Date(birthDate.value);
 start = new Date(start.getTime() - elapsedYears * MS_YEAR);
 dashaStartDate.value = start.toISOString().slice(0,10);
+updateNativeAge();
 
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ============================================
+// AYANAMSHA CHANGE → RELOAD FROM STORED JSON
+// ============================================
+ayanamsha.onchange = () => {
+
+  if(!SWISS_DATA) return;
+
+  // Clear UI
+  tree.innerHTML = "";
+ 
+
+  // Reload degrees from Swiss JSON
+  loadAyanamshaFromSwiss();
+
+  // Reapply anchor if active
+  if(anchorBody.value){
+	applyAnchor();
+  }
+
+  // Rebuild dasha tree
+  generate();
+};
+
+
+</script>
+
+
+
+
+
+
+
+
+
+
+<script>
+/* =================================================
+   VIMSHOTTARI COMPARATOR — FULL 5 LEVEL TREE
+   (NO AGE, DATE ONLY)
+   ================================================= */
+
+function buildCompareTree(side){
+
+  if(!birthDate.value) return;
+if(!BODY_DEGREE_MAP || Object.keys(BODY_DEGREE_MAP).length === 0) return;
+
+  const anchor =
+	side === "left"
+	  ? compareLeftAnchor.value
+	  : compareRightAnchor.value;
+
+  const target =
+	side === "left"
+	  ? compareLeftTree
+	  : compareRightTree;
+
+  target.innerHTML = "";
+
+  let deg = BODY_DEGREE_MAP[anchor];
+  if(deg == null) return;
+
+  let lord = nakLord(deg);
+  let elapsed = dashaElapsedYears(deg);
+
+  let start = new Date(birthDate.value);
+  start = new Date(start.getTime() - elapsed * MS_YEAR);
+
+  rotate(lord).forEach(p=>{
+	let end = addYears(start, YEARS[p]);
+
+	target.appendChild(
+	  renderCompareNode({
+		level:1,
+		planet:p,
+		start:new Date(start),
+		end:new Date(end),
+		children:genCompareLevel(2,start,p,YEARS[p],+showTill.value)
+	  })
+	);
+
+	start = end;
+  });
+}
+
+function genCompareLevel(level,start,planet,yrs,max){
+if(level > max || max < 1) return [];
+
+  let arr=[],cur=new Date(start);
+
+  rotate(planet).forEach(p=>{
+	let y = yrs * (YEARS[p]/120);
+	let end = addYears(cur,y);
+
+	arr.push({
+	  level,
+	  planet:p,
+	  start:new Date(cur),
+	  end:new Date(end),
+	  children:genCompareLevel(level+1,cur,p,y,max)
+	});
+
+	cur = end;
+  });
+
+  return arr;
+}
+
+
+
+
+
+
+function renderCompareNode(n){
+
+  let w = document.createElement("div");
+  w.className = "dasha-node level-" + n.level;
+
+  w.dataset.s = n.start;
+  w.dataset.e = n.end;
+  w.dataset.l = n.level;
+
+  let h = document.createElement("div");
+  h.className = "dasha-header";
+
+  function fmtCmpDate(d){
+    if(document.getElementById("cmpHideMonthDay")?.checked){
+      return d.getFullYear();
+    }
+    if(document.getElementById("cmpHideDates")?.checked){
+      return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+    }
+    return d.toISOString().slice(0,10);
+  }
+
+  let startAge = "";
+  let endAge   = "";
+
+  if(!document.getElementById("cmpHideAge")?.checked){
+    const birth = new Date(birthDate.value);
+    startAge = ` (${Math.floor((n.start - birth) / MS_YEAR)} years)`;
+    endAge   = ` (${Math.floor((n.end   - birth) / MS_YEAR)} years)`;
+  }
+
+  h.innerHTML =
+    `<b>${LEVELS[n.level-1]} – ${n.planet}</b> | ` +
+    `${fmtCmpDate(n.start)}${startAge} → ${fmtCmpDate(n.end)}${endAge}`;
+
+  let c = document.createElement("div");
+  c.style.display = "none";
+  n.children.forEach(ch => c.appendChild(renderCompareNode(ch)));
+
+  h.onclick = () => {
+    w.classList.toggle("active");
+    c.style.display = w.classList.contains("active") ? "block" : "none";
+  };
+
+  w.appendChild(h);
+  w.appendChild(c);
+  return w;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+function rebuildComparator(){
+  buildCompareTree("left");
+  buildCompareTree("right");
+}
+
+
+</script>
+
+
+
+<script>
+
+
+/* =========================================
+   VIMSHOTTARI COMPARATOR — TRANSIT FINDER
+   ========================================= */
+
+function setCmpToday(){
+  document.getElementById("cmpEventDate").value =
+    new Date().toISOString().slice(0,10);
+}
+
+function findCmpTransit(){
+
+  const dval = cmpEventDate.value;
+  if(!dval) return;
+  const d = new Date(dval);
+
+  document.querySelectorAll("#compareWrap .active")
+    .forEach(n=>n.classList.remove("active"));
+
+  document.querySelectorAll("#compareWrap .dasha-node > div:nth-child(2)")
+    .forEach(n=>n.style.display="none");
+
+  const nodes = [...document.querySelectorAll("#compareWrap .dasha-node")]
+    .filter(n =>
+      d >= new Date(n.dataset.s) &&
+      d <  new Date(n.dataset.e)
+    )
+    .sort((a,b)=>a.dataset.l-b.dataset.l);
+
+  nodes.forEach(n=>{
+    n.classList.add("active");
+    if(n.children[1]) n.children[1].style.display="block";
+  });
+
+  cmpEventResult.textContent =
+    nodes.map(n=>n.querySelector("b").textContent.split(" – ").pop())
+         .join(" → ");
+}
+</script>
+
+
+
+
+
+
+
+</script>
+
+
+
+
+<script>
+/* =========================================
+   YOGINI COMPARATOR (LAGNA vs CHANDRA)
+   ========================================= */
+
+function rebuildYoginiComparator(){
+  buildYoginiCompare(
+    yogCompareLeftAnchor.value,
+    yogCompareLeft
+  );
+  buildYoginiCompare(
+    yogCompareRightAnchor.value,
+    yogCompareRight
+  );
+}
+
+
+function buildYoginiCompare(anchor, target){
+
+  if(!birthDate.value) return;
+  if(!BODY_DEGREE_MAP[anchor]) return;
+
+  target.innerHTML = "";
+
+  let deg = BODY_DEGREE_MAP[anchor];
+  let nak = Math.floor(deg / 13.3333333333) + 1;
+  let idx = (nak + 3) % 8;
+  if(idx === 0) idx = 8;
+  idx--;
+
+  let birth = new Date(birthDate.value);
+  let first = YOGINI_ORDER[idx];
+
+  let nakStart = (nak - 1) * 13.3333333333;
+  let elapsedDeg = deg - nakStart;
+  if(elapsedDeg < 0) elapsedDeg += 360;
+
+  let elapsedYears = (elapsedDeg / 13.3333333333) * first.years;
+  let cur = new Date(birth.getTime() - elapsedYears * MS_YEAR);
+
+  for(let cycle=0; cycle<3; cycle++){
+    for(let i=0;i<8;i++){
+      let y = YOGINI_ORDER[(idx + i) % 8];
+      let end = addYears(cur, y.years);
+
+      target.appendChild(
+        renderYoginiCompareNode({
+          level:1,
+          name:y.name,
+          lord:y.lord,
+          start:new Date(cur),
+          end:new Date(end),
+          years:y.years,
+          children:genYoginiCompareLevel(2,cur,y,y.years)
+        })
+      );
+
+      cur = end;
+    }
+  }
+}
+
+function genYoginiCompareLevel(level,start,yogini,yrs){
+  if(level > +yoginiShowTill.value) return [];
+
+  let arr = [];
+  let cur = new Date(start);
+
+  const startIndex = YOGINI_ORDER.findIndex(y => y.name === yogini.name);
+  const rotated = [
+    ...YOGINI_ORDER.slice(startIndex),
+    ...YOGINI_ORDER.slice(0, startIndex)
+  ];
+
+  rotated.forEach(y => {
+    let len = yrs * (y.years / 36);
+    let end = addYears(cur, len);
+
+    arr.push({
+      level,
+      name: y.name,
+      lord: y.lord,
+      start: new Date(cur),
+      end: new Date(end),
+      children: genYoginiCompareLevel(level + 1, cur, y, len)
+    });
+
+    cur = end;
+  });
+
+  return arr;
+}
+
+
+
+
+
+
+function renderYoginiCompareNode(n){
+
+  let w = document.createElement("div");
+  w.className = "dasha-node yogini level-" + n.level;
+
+  w.dataset.s = n.start;
+  w.dataset.e = n.end;
+  w.dataset.l = n.level;
+
+  let h = document.createElement("div");
+  h.className = "dasha-header";
+
+  function fmt(d){
+    if(yogCmpHideMonthDay.checked) return d.getFullYear();
+    if(yogCmpHideDates.checked)
+      return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+    return d.toISOString().slice(0,10);
+  }
+
+  let startAge = "";
+  let endAge   = "";
+
+  if(!document.getElementById("yogCmpHideAge")?.checked){
+    const birth = new Date(birthDate.value);
+    startAge = ` (${Math.floor((n.start - birth) / MS_YEAR)} years)`;
+    endAge   = ` (${Math.floor((n.end   - birth) / MS_YEAR)} years)`;
+  }
+
+  h.innerHTML =
+    `<b>${n.name} { ${n.lord} }</b> | ` +
+    `${fmt(n.start)}${startAge} → ${fmt(n.end)}${endAge}`;
+
+  let c = document.createElement("div");
+  c.style.display = "none";
+  n.children.forEach(ch => c.appendChild(renderYoginiCompareNode(ch)));
+
+  h.onclick = () => {
+    w.classList.toggle("active");
+    c.style.display = w.classList.contains("active") ? "block" : "none";
+  };
+
+  w.appendChild(h);
+  w.appendChild(c);
+  return w;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+document.addEventListener("DOMContentLoaded", ()=>{
+  rebuildYoginiComparator();
+  setYoginiCmpToday();
+  setYoginiAnalyzerToday();
+});
+setCmpToday();
+
+
+
+
+
+function setYoginiCmpToday(){
+  document.getElementById("yogCmpEventDate").value =
+    new Date().toISOString().slice(0,10);
+}
+
+function findYoginiCmpTransit(){
+
+    const val = document.getElementById("yogCmpEventDate").value;
+  if(!val) return;
+
+  const d = new Date(val);
+
+  // clear previous
+  document
+    .querySelectorAll("#yogCompareWrap .active")
+    .forEach(a=>a.classList.remove("active"));
+
+  document
+    .querySelectorAll("#yogCompareWrap .dasha-node > div:nth-child(2)")
+    .forEach(d=>d.style.display="none");
+
+  // find matching yogini nodes
+  const nodes = [...document.querySelectorAll("#yogCompareWrap .dasha-node")]
+    .filter(n =>
+      d >= new Date(n.dataset.s) &&
+      d <  new Date(n.dataset.e)
+    )
+    .sort((a,b)=>a.dataset.l - b.dataset.l);
+
+  nodes.forEach(n=>{
+    n.classList.add("active");
+    if(n.children[1]) n.children[1].style.display="block";
+  });
+
+  
+}
+
+// auto-fill today
+setYoginiCmpToday();
+
+
+
+
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+/* =================================================
+   YOGINI DASHA — CLASSICAL (MOON NAKSHATRA ONLY)
+   TOTAL = 108 YEARS (36 × 3)
+   ================================================= */
+
+const YOGINI_ORDER = [
+  { name:"Mangala", lord:"Chandra", years:1 },
+  { name:"Pingala", lord:"Surya", years:2 },
+  { name:"Dhanya", lord:"Jupiter", years:3 },
+  { name:"Bhramari", lord:"Mangala", years:4 },
+  { name:"Bhadrika", lord:"Budha", years:5 },
+  { name:"Ulka", lord:"Saturn", years:6 },
+  { name:"Sidda", lord:"Venus", years:7 },
+  { name:"Sankata", lord:"Rahu+Ketu", years:8 }
+];
+
+
+
+
+
+
+
+
+
+
+
+function nakshatraStartDegree(nakNumber){
+  // Nakshatra 1 (Ashwini) starts at 0°
+  return (nakNumber - 1) * 13.3333333333;
+}
+
+
+
+function buildYogini(){
+
+  yoginiTree.innerHTML = "";
+  if(!birthDate.value) return;
+
+  let deg = BODY_DEGREE_MAP[yoginiPivot.value];
+  if(deg == null) return;
+
+  // Nakshatra index: Ashwini = 1
+  let nak = Math.floor(deg / 13.3333333333) + 1;
+
+  // Yogini index (classical)
+  let yoginiIndex = (nak + 3) % 8;
+if(yoginiIndex === 0) yoginiIndex = 8;
+yoginiIndex = yoginiIndex - 1; // convert to 0-based index
+
+
+  let birth = new Date(birthDate.value);
+
+
+let first = YOGINI_ORDER[yoginiIndex];
+
+
+
+
+
+
+
+// -------------------------------
+// NAKSHATRA-LEVEL BHOGYA (FINAL & CORRECT)
+// -------------------------------
+
+// degrees elapsed in nakshatra
+let nakStart = nakshatraStartDegree(nak);
+let nakDeg = deg - nakStart;
+if(nakDeg < 0) nakDeg += 360;
+
+// elapsed degrees in nakshatra
+let elapsedDeg = nakDeg;
+
+// elapsed Yogini years at birth (BHUKTA)
+let elapsedYears =
+  (elapsedDeg / 13.3333333333) * first.years;
+
+
+
+
+
+
+  // real start of first Yogini
+  let cur = new Date(birth.getTime() - elapsedYears * MS_YEAR);
+
+  let maxLevel = +yoginiShowTill.value;
+
+  // 108 years = 3 full cycles
+  for(let cycle=0; cycle<3; cycle++){
+    for(let i=0;i<8;i++){
+      let y = YOGINI_ORDER[(yoginiIndex + i) % 8];
+      let end = addYears(cur, y.years);
+
+      yoginiTree.appendChild(
+        renderYoginiNode({
+          level:1,
+          name:y.name,
+          lord:y.lord,
+          start:new Date(cur),
+          end:new Date(end),
+          years:y.years,
+          children:genYoginiLevel(2,cur,y,y.years,maxLevel)
+        })
+      );
+
+      cur = end;
+    }
+  }
 }
 
 
@@ -472,9 +1754,215 @@ dashaStartDate.value = start.toISOString().slice(0,10);
 
 
 
+document.addEventListener("DOMContentLoaded", ()=>{
+  if(birthDate.value){
+    buildYogini();
+  }
+});
+
+
+function setYoginiAnalyzerToday(){
+  document.getElementById("yoginiAnalyzerDate").value =
+    new Date().toISOString().slice(0,10);
+}
+
+
+
+
+
+
+
+
+function genYoginiLevel(level,start,yogini,yrs,max){
+  if(level > max) return [];
+
+  let arr = [];
+  let cur = new Date(start);
+
+  // ✅ rotate from CURRENT yogini, not Mangala
+  const startIndex = YOGINI_ORDER.findIndex(y => y.name === yogini.name);
+  const rotated = [
+    ...YOGINI_ORDER.slice(startIndex),
+    ...YOGINI_ORDER.slice(0, startIndex)
+  ];
+
+  rotated.forEach(y => {
+    let ylen = yrs * (y.years / 36);
+    let end = addYears(cur, ylen);
+
+    arr.push({
+      level,
+      name: y.name,
+      lord: y.lord,
+      start: new Date(cur),
+      end: new Date(end),
+      years: ylen,
+      children: genYoginiLevel(level + 1, cur, y, ylen, max)
+    });
+
+    cur = end;
+  });
+
+  return arr;
+}
+
+
+
+
+
+
+
+
+
+
+
+function renderYoginiNode(n){
+
+  let w = document.createElement("div");
+  w.className = "dasha-node yogini level-" + n.level;
+
+  w.dataset.s = n.start;
+  w.dataset.e = n.end;
+  w.dataset.l = n.level;
+
+  let h = document.createElement("div");
+  h.className = "dasha-header";
+
+  const hideDates    = document.getElementById("yogHideDates")?.checked;
+  const hideMonthDay = document.getElementById("yogHideMonthDay")?.checked;
+  const hideAge      = document.getElementById("yogHideAge")?.checked;
+  const hideAgeMD    = document.getElementById("yogHideAgeMD")?.checked;
+
+  function fmt(d){
+    if(hideMonthDay) return d.getFullYear();
+    if(hideDates)
+      return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0");
+    return d.toISOString().slice(0,10);
+  }
+
+  function yogAge(d){
+    if(hideAge) return "";
+
+    const birth = new Date(birthDate.value);
+    const years = Math.floor((d - birth) / MS_YEAR);
+
+    // 🔒 HARD LOCK: Month + Days hidden → YEARS ONLY
+    if(hideAgeMD){
+      return ` (${years} years)`;
+    }
+
+    // fallback (only if MD not hidden)
+    return ` (${diffYMD(birth, d)})`;
+  }
+
+  h.innerHTML =
+    `<b>${n.name} { ${n.lord} }</b> ` +
+    `${fmt(n.start)}${yogAge(n.start)} →→ ${fmt(n.end)}${yogAge(n.end)}`;
+
+  let c = document.createElement("div");
+  c.style.display = "none";
+  n.children.forEach(ch => c.appendChild(renderYoginiNode(ch)));
+
+  h.onclick = () => {
+    w.classList.toggle("active");
+    c.style.display = w.classList.contains("active") ? "block" : "none";
+  };
+
+  w.appendChild(h);
+  w.appendChild(c);
+  return w;
+}
+
+
+
+
+
+
+
+
+function findYoginiAnalyzer(){
+
+    const val = document.getElementById("yoginiAnalyzerDate").value;
+  if(!val) return;
+
+  const d = new Date(val);
+
+  document
+    .querySelectorAll("#yoginiTree .active")
+    .forEach(a=>a.classList.remove("active"));
+
+  document
+    .querySelectorAll("#yoginiTree .dasha-node > div:nth-child(2)")
+    .forEach(d=>d.style.display="none");
+
+  const nodes = [...document.querySelectorAll("#yoginiTree .dasha-node")]
+    .filter(n =>
+      d >= new Date(n.dataset.s) &&
+      d <  new Date(n.dataset.e)
+    )
+    .sort((a,b)=>a.dataset.l - b.dataset.l);
+
+  nodes.forEach(n=>{
+    n.classList.add("active");
+    if(n.children[1]) n.children[1].style.display="block";
+  });
+
+
+}
+
+
+
+
+
+
+
+
+
+
 </script>
 
 
+<script>
+/* =========================================
+   YOGINI EVENT ANALYZER (SINGLE EVENT)
+   ========================================= */
+
+function setYoginiToday(){
+  document.getElementById("yoginiEventDate").value =
+    new Date().toISOString().slice(0,10);
+}
+
+function findYoginiEvent(){
+
+  const out = document.getElementById("yoginiEventResult");
+  const val = document.getElementById("yoginiEventDate").value;
+  if(!val) return;
+
+  const d = new Date(val);
+
+  document
+    .querySelectorAll("#yoginiTree .active")
+    .forEach(a=>a.classList.remove("active"));
+
+  document
+    .querySelectorAll("#yoginiTree .dasha-node > div:nth-child(2)")
+    .forEach(d=>d.style.display="none");
+
+  const nodes = [...document.querySelectorAll("#yoginiTree .dasha-node")]
+    .filter(n => d >= new Date(n.dataset?.s || n.__start) &&
+                 d <  new Date(n.dataset?.e || n.__end))
+    .sort((a,b)=>a.classList.contains("level-1")?-1:1);
+
+  nodes.forEach(n=>{
+    n.classList.add("active");
+    if(n.children[1]) n.children[1].style.display="block";
+  });
+
+  out.textContent = nodes
+    .map(n=>n.querySelector("b").textContent)
+    .join(" → ");
+}
+</script>
 
 
 
