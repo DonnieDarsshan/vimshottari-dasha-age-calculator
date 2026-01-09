@@ -73,9 +73,16 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 }
 
 /* ===== EGYPTIAN HIGHLIGHTS ===== */
+/* ===== STABLE MAHADASHA HIGHLIGHT (ANDROID SAFE) ===== */
 .active.level-1 > .dasha-header{
-  background:#facc15;color:#1f2937;border:2px solid #ca8a04;box-shadow:0 0 12px #facc15;
+  background:#eab308;           /* darker, stable gold */
+  color:#000000;               /* forced black text */
+  border:2px solid #a16207;
+  box-shadow:none;             /* remove glow (causes Android flicker) */
+  text-shadow:none;            /* avoid color washout */
 }
+
+
 .active.level-2 > .dasha-header{
   background:#38bdf8;color:#082f49;border:2px solid #0284c7;box-shadow:0 0 10px #38bdf8;
 }
