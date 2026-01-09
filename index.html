@@ -44,6 +44,29 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
   padding:6px 8px;
   border-radius:6px;
 }
+
+
+/* ===== ALIGN DASHA COLUMNS (GLOBAL FIX) ===== */
+.dasha-header{
+  display:grid;
+  grid-template-columns: 190px 1fr;
+  column-gap: 12px;
+  align-items:center;
+  white-space:nowrap;
+}
+
+@media (max-width: 600px){
+  .dasha-header{
+    grid-template-columns: 160px 1fr;
+  }
+}
+
+
+
+
+
+
+
 .active > .dasha-header:hover{
   background:inherit !important;
   color:inherit !important;
@@ -71,6 +94,16 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
   font-weight:700;
   color:#4ade80;
 }
+
+
+
+
+
+
+
+
+
+
 </style>
 </head>
 
@@ -91,9 +124,9 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 <label>Vimshottari Anchor:</label>
 <select id="anchorBody" onchange="applyAnchor()">
   <option value="">None</option>
+  <option value="Chandra" selected>Chandra</option>
   <option value="Lagna">Lagna</option>
   <option value="Surya">Surya</option>
-<option value="Chandra" selected>Chandra</option>
   <option value="Mangala">Mangala</option>
   <option value="Budha">Budha</option>
   <option value="Jupiter">Jupiter</option>
@@ -108,6 +141,13 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
   <option value="lahiri" selected>Lahiri</option>
   <option value="raman">Raman</option>
   <option value="kp">KP (New)</option>
+  
+  
+  <label style="margin-left:10px">
+  <input type="checkbox" id="cosmeticBirthdate" checked>
+  Birthdate
+</label>
+
 </select>
 
 
@@ -584,6 +624,9 @@ const MS_YEAR = 365.25*24*60*60*1000;
 
 let lastExpanded=false;
 
+let COSMETIC_BIRTHDATE =
+  document.getElementById("cosmeticBirthdate")?.checked || false;
+
 // ===============================
 // GLOBAL SWISS JSON STORAGE
 // ===============================
@@ -597,6 +640,10 @@ function rotate(p){let i=ORDER.indexOf(p);return ORDER.slice(i).concat(ORDER.sli
 
 
 
+document.getElementById("cosmeticBirthdate").onchange = () => {
+  COSMETIC_BIRTHDATE = document.getElementById("cosmeticBirthdate").checked;
+  autoRefreshAll();
+};
 
 
 
@@ -623,6 +670,75 @@ function diffYMD(from,to){
 
   return `${y} years ${m} months ${da} days`;
 }
+
+
+
+
+
+
+
+
+function diffYMD_YOGINI(from, to){
+  if(!from || to < from) return "";
+
+  if(document.getElementById("yogHideAge")?.checked){
+    return "";
+  }
+
+  let d = to - from;
+  let y = Math.floor(d / MS_YEAR);
+
+  // Yogini Hide Month + Days
+  if(document.getElementById("yogHideAgeMD")?.checked){
+    return `${y} years`;
+  }
+
+  d -= y * MS_YEAR;
+  let m = Math.floor(d / (30.4375*24*60*60*1000));
+  let da = Math.floor((d % (30.4375*24*60*60*1000))/(24*60*60*1000));
+
+  return `${y} years ${m} months ${da} days`;
+}
+
+
+
+
+
+
+
+
+
+function cosmeticAgeZero(){
+  if(document.getElementById("hideAge")?.checked){
+    return "";
+  }
+
+  // Respect Hide Age Month + Days
+  if(document.getElementById("hideAgeMD")?.checked){
+    return " (Age 0 years)";
+  }
+
+  return " (Age 0 years 0 months 0 days)";
+}
+
+
+
+
+
+
+function cosmeticStartDate(d){
+  if(
+    COSMETIC_BIRTHDATE &&
+    birthDate.value &&
+    d < new Date(birthDate.value)
+  ){
+    return new Date(birthDate.value);
+  }
+  return d;
+}
+
+
+
 
 
 
@@ -717,14 +833,36 @@ function render(n){
 
 
   let startDate = formatDate(n.start);
+
+  if(
+    COSMETIC_BIRTHDATE &&
+    n.level === 1 &&
+    birthDate.value &&
+    new Date(n.start) < new Date(birthDate.value)
+  ){
+    startDate = formatDate(new Date(birthDate.value));
+  }
+
+
   let endDate = formatDate(n.end);
 
   let ageStart = hideAge ? "" : ` (Age ${diffYMD(new Date(birthDate.value),n.start)})`;
+
+  if(
+    COSMETIC_BIRTHDATE &&
+    n.level === 1 &&
+    birthDate.value &&
+    new Date(n.start) < new Date(birthDate.value)
+  ){
+    ageStart = cosmeticAgeZero();
+  }
+
+
   let ageEnd   = hideAge ? "" : ` (Age ${diffYMD(new Date(birthDate.value),n.end)})`;
 
   h.innerHTML = `<b>${LEVELS[n.level-1]} – ${n.planet}</b> |
-	${startDate}${ageStart}
-	→ ${endDate}${ageEnd}`;
+	${startDate}${ageStart} →→→→ ${endDate}${ageEnd}`;
+
 
 
   let c=document.createElement("div");c.style.display="none";
@@ -1141,6 +1279,14 @@ dashaStartDate.value = start.toISOString().slice(0,10);
 updateNativeAge();
 
 
+  // 🔁 AUTO REFRESH AFTER ANCHOR RECALCULATION
+  generate();
+  rebuildComparator();
+  buildYogini();
+  rebuildYoginiComparator();
+
+
+
 }
 
 
@@ -1165,21 +1311,22 @@ ayanamsha.onchange = () => {
 
   if(!SWISS_DATA) return;
 
-  // Clear UI
   tree.innerHTML = "";
- 
 
-  // Reload degrees from Swiss JSON
   loadAyanamshaFromSwiss();
 
-  // Reapply anchor if active
   if(anchorBody.value){
-	applyAnchor();
+    applyAnchor(); // ← this will auto-generate
+  }else{
+    generate();
+    rebuildComparator();
+    buildYogini();
+    rebuildYoginiComparator();
   }
 
-  // Rebuild dasha tree
-  generate();
+  updateNativeAge();
 };
+
 
 
 </script>
@@ -1282,28 +1429,64 @@ function renderCompareNode(n){
   let h = document.createElement("div");
   h.className = "dasha-header";
 
-  function fmtCmpDate(d){
-    if(document.getElementById("cmpHideMonthDay")?.checked){
-      return d.getFullYear();
-    }
-    if(document.getElementById("cmpHideDates")?.checked){
-      return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
-    }
-    return d.toISOString().slice(0,10);
+
+
+
+
+
+
+
+
+
+function fmtCmpDate(d){
+
+  d = cosmeticStartDate(d);
+
+  if(document.getElementById("cmpHideMonthDay")?.checked){
+    return d.getFullYear();
   }
+  if(document.getElementById("cmpHideDates")?.checked){
+    return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+  }
+  return d.toISOString().slice(0,10);
+}
+
+
+
+
 
   let startAge = "";
-  let endAge   = "";
+let endAge   = "";
 
-  if(!document.getElementById("cmpHideAge")?.checked){
-    const birth = new Date(birthDate.value);
-    startAge = ` (${Math.floor((n.start - birth) / MS_YEAR)} years)`;
-    endAge   = ` (${Math.floor((n.end   - birth) / MS_YEAR)} years)`;
-  }
+if(
+  COSMETIC_BIRTHDATE &&
+  n.level === 1 &&
+  birthDate.value &&
+  n.start < new Date(birthDate.value)
+){
+  startAge = cosmeticAgeZero().replace("Age ","");
+}
+else if(!document.getElementById("cmpHideAge")?.checked){
+  const birth = new Date(birthDate.value);
+  startAge = ` (${Math.floor((n.start - birth) / MS_YEAR)} years)`;
+}
+
+if(!document.getElementById("cmpHideAge")?.checked){
+  const birth = new Date(birthDate.value);
+  endAge = ` (${Math.floor((n.end - birth) / MS_YEAR)} years)`;
+}
+
+
+
+
+
+
+
 
   h.innerHTML =
-    `<b>${LEVELS[n.level-1]} – ${n.planet}</b> | ` +
-    `${fmtCmpDate(n.start)}${startAge} → ${fmtCmpDate(n.end)}${endAge}`;
+  `<b>${LEVELS[n.level-1]} – ${n.planet}</b> | ` +
+  `${fmtCmpDate(n.start)}${startAge} → ${fmtCmpDate(n.end)}${endAge}`;
+
 
   let c = document.createElement("div");
   c.style.display = "none";
@@ -1503,12 +1686,16 @@ function renderYoginiCompareNode(n){
   let h = document.createElement("div");
   h.className = "dasha-header";
 
-  function fmt(d){
-    if(yogCmpHideMonthDay.checked) return d.getFullYear();
-    if(yogCmpHideDates.checked)
-      return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
-    return d.toISOString().slice(0,10);
-  }
+function fmt(d){
+
+  d = cosmeticStartDate(d);
+
+  if(yogCmpHideMonthDay.checked) return d.getFullYear();
+  if(yogCmpHideDates.checked)
+    return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+  return d.toISOString().slice(0,10);
+}
+
 
   let startAge = "";
   let endAge   = "";
@@ -1520,8 +1707,9 @@ function renderYoginiCompareNode(n){
   }
 
   h.innerHTML =
-    `<b>${n.name} { ${n.lord} }</b> | ` +
-    `${fmt(n.start)}${startAge} → ${fmt(n.end)}${endAge}`;
+  `<b>${n.name} { ${n.lord} }</b> | ` +
+  `${fmt(n.start)}${startAge} → ${fmt(n.end)}${endAge}`;
+
 
   let c = document.createElement("div");
   c.style.display = "none";
@@ -1554,6 +1742,16 @@ document.addEventListener("DOMContentLoaded", ()=>{
   setYoginiAnalyzerToday();
 });
 setCmpToday();
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const cb = document.getElementById("cosmeticBirthdate");
+  if(cb){
+    COSMETIC_BIRTHDATE = cb.checked;
+  }
+});
+
+
 
 
 
@@ -1833,31 +2031,56 @@ function renderYoginiNode(n){
   const hideAge      = document.getElementById("yogHideAge")?.checked;
   const hideAgeMD    = document.getElementById("yogHideAgeMD")?.checked;
 
-  function fmt(d){
+    function fmt(d){
+    if(
+      COSMETIC_BIRTHDATE &&
+      n.level === 1 &&
+      birthDate.value &&
+      d < new Date(birthDate.value)
+    ){
+      d = new Date(birthDate.value);
+    }
+
     if(hideMonthDay) return d.getFullYear();
     if(hideDates)
       return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0");
     return d.toISOString().slice(0,10);
   }
 
-  function yogAge(d){
-    if(hideAge) return "";
 
-    const birth = new Date(birthDate.value);
-    const years = Math.floor((d - birth) / MS_YEAR);
 
-    // 🔒 HARD LOCK: Month + Days hidden → YEARS ONLY
-    if(hideAgeMD){
-      return ` (${years} years)`;
-    }
 
-    // fallback (only if MD not hidden)
-    return ` (${diffYMD(birth, d)})`;
+
+
+
+
+   function yogAge(d){
+
+  if(document.getElementById("yogHideAge")?.checked){
+    return "";
   }
 
+  // Cosmetic birthdate (display only)
+  d = cosmeticStartDate(d);
+
+  const birth = new Date(birthDate.value);
+
+  return ` (${diffYMD_YOGINI(birth, d)})`;
+}
+
+
+
+
+
+
+
+
+
+
   h.innerHTML =
-    `<b>${n.name} { ${n.lord} }</b> ` +
-    `${fmt(n.start)}${yogAge(n.start)} →→ ${fmt(n.end)}${yogAge(n.end)}`;
+  `<b>${n.name} { ${n.lord} }</b> ` +
+  `${fmt(n.start)}${yogAge(n.start)} →→→→ ${fmt(n.end)}${yogAge(n.end)}`;
+
 
   let c = document.createElement("div");
   c.style.display = "none";
@@ -1962,6 +2185,42 @@ function findYoginiEvent(){
     .map(n=>n.querySelector("b").textContent)
     .join(" → ");
 }
+
+
+
+
+
+
+/* =====================================================
+   SAFE AUTO-REFRESH (NO EVENT OVERRIDES)
+   ===================================================== */
+
+function autoRefreshAll(){
+  if(!birthDate.value) return;
+  generate();
+  rebuildComparator();
+  buildYogini();
+  rebuildYoginiComparator();
+  updateNativeAge();
+}
+
+birthDate.addEventListener("change", autoRefreshAll);
+startPlanet.addEventListener("change", autoRefreshAll);
+showTill.addEventListener("change", autoRefreshAll);
+repeatCycle.addEventListener("change", autoRefreshAll);
+
+yoginiPivot.addEventListener("change", autoRefreshAll);
+yoginiShowTill.addEventListener("change", autoRefreshAll);
+
+compareLeftAnchor.addEventListener("change", autoRefreshAll);
+compareRightAnchor.addEventListener("change", autoRefreshAll);
+yogCompareLeftAnchor.addEventListener("change", autoRefreshAll);
+yogCompareRightAnchor.addEventListener("change", autoRefreshAll);
+
+
+
+
+
 </script>
 
 
