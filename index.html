@@ -12,11 +12,12 @@
 
 <style>
 body{
-  background:#0b0f14;
-  color:#f5e9c6;
+  background: linear-gradient(180deg,#020617,#022c22,#020617);
+  color:#d1fae5;
   font-family:Segoe UI,Arial,sans-serif;
   padding:20px;
 }
+
 h2,h3{
   color:#facc15;
   text-shadow:0 0 6px #b45309;
@@ -46,6 +47,38 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 }
 
 
+/* ==========================================
+   EMERALD FOREST — ROW VISIBILITY
+   ========================================== */
+.dasha-header{
+  border:1px solid rgba(6,95,70,0.45); /* thin emerald line */
+  background: rgba(2,44,34,0.65);      /* dark forest slab */
+  transition: background 0.15s ease,
+              border-color 0.15s ease,
+              transform 0.12s ease;
+}
+
+
+
+
+
+/* ===== ULTRA DARK HOVER — BLACK × CRIMSON ===== */
+.dasha-header:hover{
+  background: linear-gradient(
+    90deg,
+    rgba(0,0,0,0.98),
+    rgba(220,38,38,0.18)
+  );
+  border-color:#7f1d1d;
+  transform: translateX(2px);
+}
+
+
+
+
+
+
+
 /* ===== ALIGN DASHA COLUMNS (GLOBAL FIX) ===== */
 .dasha-header{
   display:grid;
@@ -72,29 +105,66 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
   color:inherit !important;
 }
 
-/* ===== EGYPTIAN HIGHLIGHTS ===== */
-/* ===== STABLE MAHADASHA HIGHLIGHT (ANDROID SAFE) ===== */
+
+
+
+
+
+
+
+
+
+/* ===== FINAL DASH A COLORS — MAIN TREE ===== */
+
+/* ===== MAHADASHA — ANDROID SAFE ROYAL YELLOW ===== */
 .active.level-1 > .dasha-header{
-  background:#eab308;           /* darker, stable gold */
-  color:#000000;               /* forced black text */
+  background:#eab308;
+  color:#000000;            /* FORCE BLACK (ANDROID SAFE) */
   border:2px solid #a16207;
-  box-shadow:none;             /* remove glow (causes Android flicker) */
-  text-shadow:none;            /* avoid color washout */
+  box-shadow:none;
+  text-shadow:none;         /* VERY IMPORTANT */
+  filter:none;              /* ANDROID SAFETY */
 }
 
 
+
+/* LEVEL 2 — BHUKTI (DEEP CRIMSON) */
 .active.level-2 > .dasha-header{
-  background:#38bdf8;color:#082f49;border:2px solid #0284c7;box-shadow:0 0 10px #38bdf8;
+  background:#7f1d1d;
+  color:#fee2e2;
+  border:2px solid #dc2626;
 }
+
+/* LEVEL 3 — ANTARA (OCEAN TEAL) */
 .active.level-3 > .dasha-header{
-  background:#4ade80;color:#052e16;border:2px solid #16a34a;box-shadow:0 0 10px #4ade80;
+  background:#0f766e;
+  color:#ccfbf1;
+  border:2px solid #2dd4bf;
 }
+
+/* LEVEL 4 — SOOKSHMA (BURNT COPPER) */
 .active.level-4 > .dasha-header{
-  background:#fbbf24;color:#422006;border:2px solid #d97706;
+  background:#7c2d12;
+  color:#ffedd5;
+  border:2px solid #ea580c;
 }
+
+/* LEVEL 5 — PRANA (ASH PURPLE GRAY) */
 .active.level-5 > .dasha-header{
-  background:#eab308;color:#422006;border:2px solid #a16207;
+  background:#312e81;
+  color:#e0e7ff;
+  border:2px solid #818cf8;
 }
+
+
+
+
+
+
+
+
+
+
 .small{font-size:13px;opacity:.9}
 .age-box{
   margin-left:10px;
@@ -311,34 +381,50 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
   padding:4px 6px;
   border-radius:6px;
 }
-/* ===== COMPARATOR LEVEL COLORS ===== */
+
+
+
+
+
+
+
+
+
+/* ===== FINAL DASH A COLORS — COMPARATOR ===== */
+
+/* ===== COMPARATOR MAHADASHA — ANDROID SAFE YELLOW ===== */
 .compareTree .level-1.active > .dasha-header{
-  background:#facc15;
-  color:#1f2937;
-  border:2px solid #ca8a04;
-  box-shadow:0 0 10px #facc15;
+  background:#eab308;
+  color:#000000;
+  border:2px solid #a16207;
+  box-shadow:none;
+  text-shadow:none;
+  filter:none;
 }
+
+
 .compareTree .level-2.active > .dasha-header{
-  background:#38bdf8;
-  color:#082f49;
-  border:2px solid #0284c7;
-  box-shadow:0 0 8px #38bdf8;
+  background:#7f1d1d;
+  color:#fee2e2;
+  border:2px solid #dc2626;
 }
+
 .compareTree .level-3.active > .dasha-header{
-  background:#4ade80;
-  color:#052e16;
-  border:2px solid #16a34a;
-  box-shadow:0 0 8px #4ade80;
+  background:#0f766e;
+  color:#ccfbf1;
+  border:2px solid #2dd4bf;
 }
+
 .compareTree .level-4.active > .dasha-header{
-  background:#fb923c;
-  color:#431407;
+  background:#7c2d12;
+  color:#ffedd5;
   border:2px solid #ea580c;
 }
+
 .compareTree .level-5.active > .dasha-header{
-  background:#c084fc;
-  color:#2e1065;
-  border:2px solid #9333ea;
+  background:#312e81;
+  color:#e0e7ff;
+  border:2px solid #818cf8;
 }
 
 
@@ -351,39 +437,44 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 
 
 
-/* ===== YOGINI DASH A COLORS (UNIQUE) ===== */
+
+
+
+
+
+
+
+/* ===== FINAL DASH A COLORS — YOGINI ===== */
 
 .yogini .level-1.active > .dasha-header{
-  background:#7f1d1d;
-  color:#fff;
-  border:2px solid #991b1b;
-  box-shadow:0 0 10px #7f1d1d;
+  background:#3730a3;
+  color:#eef2ff;
+  border:2px solid #6366f1;
+  box-shadow:none;
 }
 
 .yogini .level-2.active > .dasha-header{
-  background:#312e81;
-  color:#e0e7ff;
-  border:2px solid #4338ca;
-  box-shadow:0 0 10px #312e81;
+  background:#7f1d1d;
+  color:#fee2e2;
+  border:2px solid #dc2626;
 }
 
 .yogini .level-3.active > .dasha-header{
-  background:#064e3b;
-  color:#d1fae5;
-  border:2px solid #059669;
-  box-shadow:0 0 10px #064e3b;
+  background:#0f766e;
+  color:#ccfbf1;
+  border:2px solid #2dd4bf;
 }
 
 .yogini .level-4.active > .dasha-header{
   background:#7c2d12;
   color:#ffedd5;
-  border:2px solid #c2410c;
+  border:2px solid #ea580c;
 }
 
 .yogini .level-5.active > .dasha-header{
-  background:#581c87;
-  color:#f5d0fe;
-  border:2px solid #7e22ce;
+  background:#312e81;
+  color:#e0e7ff;
+  border:2px solid #818cf8;
 }
 
 
