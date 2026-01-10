@@ -128,15 +128,38 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 
 /* ===== FINAL DASH A COLORS — MAIN TREE ===== */
 
-/* ===== MAHADASHA — ANDROID SAFE ROYAL YELLOW (LOCKED) ===== */
+
+/* ===== MAHADASHA — ANDROID FINAL HARD LOCK ===== */
 .active.level-1 > .dasha-header{
   background:#eab308 !important;
-  color:#000000 !important;          /* 🔒 HARD LOCK BLACK */
+
+  /* DESKTOP + ANDROID */
+  color:#000000 !important;
+
+  /* 🔥 ANDROID BUG KILLER */
+  -webkit-text-fill-color:#000000 !important;
+
   border:2px solid #a16207 !important;
   box-shadow:none !important;
   text-shadow:none !important;
   filter:none !important;
 }
+
+
+
+
+
+
+
+/* 🔒 FORCE ALL CHILD TEXT (ANDROID FIX) */
+.active.level-1 > .dasha-header *,
+.active.level-1 > .dasha-header b,
+.active.level-1 > .dasha-header span,
+.active.level-1 > .dasha-header .dasha-symbol{
+  color:#000000 !important;
+  -webkit-text-fill-color:#000000 !important;
+}
+
 
 /* 🔒 FORCE ALL TEXT INSIDE MAHADASHA TO BLACK */
 .active.level-1 > .dasha-header *,
@@ -411,16 +434,25 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 
 /* ===== FINAL DASH A COLORS — COMPARATOR ===== */
 
-/* ===== COMPARATOR MAHADASHA — ANDROID SAFE YELLOW ===== */
-/* ===== COMPARATOR MAHADASHA — ANDROID SAFE (LOCKED) ===== */
+/* ===== COMPARATOR MAHADASHA — ANDROID HARD LOCK ===== */
 .compareTree .level-1.active > .dasha-header{
   background:#eab308 !important;
   color:#000000 !important;
+  -webkit-text-fill-color:#000000 !important;
+
   border:2px solid #a16207 !important;
   box-shadow:none !important;
   text-shadow:none !important;
   filter:none !important;
 }
+
+.compareTree .level-1.active > .dasha-header *,
+.compareTree .level-1.active > .dasha-header b,
+.compareTree .level-1.active > .dasha-header span{
+  color:#000000 !important;
+  -webkit-text-fill-color:#000000 !important;
+}
+
 
 .compareTree .level-1.active > .dasha-header *,
 .compareTree .level-1.active > .dasha-header b,
@@ -505,6 +537,26 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 
 
 
+
+
+
+
+
+
+
+
+/* ===== ANDROID TAP / ACTIVE STATE OVERRIDE ===== */
+.active.level-1 > .dasha-header:active,
+.active.level-1 > .dasha-header:focus{
+  color:#000000 !important;
+  -webkit-text-fill-color:#000000 !important;
+}
+
+.active.level-1 > .dasha-header:active *,
+.active.level-1 > .dasha-header:focus *{
+  color:#000000 !important;
+  -webkit-text-fill-color:#000000 !important;
+}
 
 
 
