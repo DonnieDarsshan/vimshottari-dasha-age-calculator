@@ -76,6 +76,18 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 
 
 
+/* ===== ANDROID TOUCH SAFETY ===== */
+.active.level-1 > .dasha-header:hover{
+  color:#000000 !important;
+}
+
+.active.level-1 > .dasha-header:hover *{
+  color:#000000 !important;
+}
+
+
+
+
 
 
 
@@ -116,14 +128,21 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 
 /* ===== FINAL DASH A COLORS — MAIN TREE ===== */
 
-/* ===== MAHADASHA — ANDROID SAFE ROYAL YELLOW ===== */
+/* ===== MAHADASHA — ANDROID SAFE ROYAL YELLOW (LOCKED) ===== */
 .active.level-1 > .dasha-header{
-  background:#eab308;
-  color:#000000;            /* FORCE BLACK (ANDROID SAFE) */
-  border:2px solid #a16207;
-  box-shadow:none;
-  text-shadow:none;         /* VERY IMPORTANT */
-  filter:none;              /* ANDROID SAFETY */
+  background:#eab308 !important;
+  color:#000000 !important;          /* 🔒 HARD LOCK BLACK */
+  border:2px solid #a16207 !important;
+  box-shadow:none !important;
+  text-shadow:none !important;
+  filter:none !important;
+}
+
+/* 🔒 FORCE ALL TEXT INSIDE MAHADASHA TO BLACK */
+.active.level-1 > .dasha-header *,
+.active.level-1 > .dasha-header b,
+.active.level-1 > .dasha-header span{
+  color:#000000 !important;
 }
 
 
@@ -393,13 +412,20 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 /* ===== FINAL DASH A COLORS — COMPARATOR ===== */
 
 /* ===== COMPARATOR MAHADASHA — ANDROID SAFE YELLOW ===== */
+/* ===== COMPARATOR MAHADASHA — ANDROID SAFE (LOCKED) ===== */
 .compareTree .level-1.active > .dasha-header{
-  background:#eab308;
-  color:#000000;
-  border:2px solid #a16207;
-  box-shadow:none;
-  text-shadow:none;
-  filter:none;
+  background:#eab308 !important;
+  color:#000000 !important;
+  border:2px solid #a16207 !important;
+  box-shadow:none !important;
+  text-shadow:none !important;
+  filter:none !important;
+}
+
+.compareTree .level-1.active > .dasha-header *,
+.compareTree .level-1.active > .dasha-header b,
+.compareTree .level-1.active > .dasha-header span{
+  color:#000000 !important;
 }
 
 
