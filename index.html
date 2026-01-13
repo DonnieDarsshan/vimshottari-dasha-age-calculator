@@ -76,18 +76,6 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 
 
 
-/* ===== ANDROID TOUCH SAFETY ===== */
-.active.level-1 > .dasha-header:hover{
-  color:#000000 !important;
-}
-
-.active.level-1 > .dasha-header:hover *{
-  color:#000000 !important;
-}
-
-
-
-
 
 
 
@@ -128,44 +116,14 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 
 /* ===== FINAL DASH A COLORS — MAIN TREE ===== */
 
-
-/* ===== MAHADASHA — ANDROID FINAL HARD LOCK ===== */
+/* ===== MAHADASHA — ANDROID SAFE ROYAL YELLOW ===== */
 .active.level-1 > .dasha-header{
-  background:#eab308 !important;
-
-  /* DESKTOP + ANDROID */
-  color:#000000 !important;
-
-  /* 🔥 ANDROID BUG KILLER */
-  -webkit-text-fill-color:#000000 !important;
-
-  border:2px solid #a16207 !important;
-  box-shadow:none !important;
-  text-shadow:none !important;
-  filter:none !important;
-}
-
-
-
-
-
-
-
-/* 🔒 FORCE ALL CHILD TEXT (ANDROID FIX) */
-.active.level-1 > .dasha-header *,
-.active.level-1 > .dasha-header b,
-.active.level-1 > .dasha-header span,
-.active.level-1 > .dasha-header .dasha-symbol{
-  color:#000000 !important;
-  -webkit-text-fill-color:#000000 !important;
-}
-
-
-/* 🔒 FORCE ALL TEXT INSIDE MAHADASHA TO BLACK */
-.active.level-1 > .dasha-header *,
-.active.level-1 > .dasha-header b,
-.active.level-1 > .dasha-header span{
-  color:#000000 !important;
+  background:#eab308;
+  color:#000000;            /* FORCE BLACK (ANDROID SAFE) */
+  border:2px solid #a16207;
+  box-shadow:none;
+  text-shadow:none;         /* VERY IMPORTANT */
+  filter:none;              /* ANDROID SAFETY */
 }
 
 
@@ -241,17 +199,24 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 
 <hr>
 <button onclick="saveJSON()">Save (JSON)</button>
-<button onclick="loadJSON()">Load (JSON)</button>
-<button onclick="loadSwiss()">Load Swiss (JSON)</button>
-
+<button onclick="loadJSON()">Load </button>
+<button onclick="loadSwiss()">Load Swiss </button>
+<button onclick="clearAll()"> Clear All</button>
 
 <div>
   <label>Birth Date (Pivot):</label>
   <input type="date" id="birthDate">
+  
+  
+
+
+
 
 <label>Vimshottari Anchor:</label>
 <select id="anchorBody" onchange="applyAnchor()">
   <option value="Chandra" selected>Chandra</option>
+
+  <!-- PLANETS -->
   <option value="Lagna">Lagna</option>
   <option value="Surya">Surya</option>
   <option value="Mangala">Mangala</option>
@@ -261,6 +226,19 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
   <option value="Saturn">Saturn</option>
   <option value="Rahu">Rahu</option>
   <option value="Ketu">Ketu</option>
+
+  <!-- CUSPS -->
+  <option value="CSL2">CSL-2</option>
+  <option value="CSL3">CSL-3</option>
+  <option value="CSL4">CSL-4</option>
+  <option value="CSL5">CSL-5</option>
+  <option value="CSL6">CSL-6</option>
+  <option value="CSL7">CSL-7</option>
+  <option value="CSL8">CSL-8</option>
+  <option value="CSL9">CSL-9</option>
+  <option value="CSL10">CSL-10</option>
+  <option value="CSL11">CSL-11</option>
+  <option value="CSL12">CSL-12</option>
 </select>
 
 
@@ -354,7 +332,8 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 <hr>
 
 <h3>Event Analyzer</h3>
-<div><button onclick="clearAll()">Clear All</button></div>
+
+
 <div id="events"></div>
 
 
@@ -434,30 +413,14 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 
 /* ===== FINAL DASH A COLORS — COMPARATOR ===== */
 
-/* ===== COMPARATOR MAHADASHA — ANDROID HARD LOCK ===== */
+/* ===== COMPARATOR MAHADASHA — ANDROID SAFE YELLOW ===== */
 .compareTree .level-1.active > .dasha-header{
-  background:#eab308 !important;
-  color:#000000 !important;
-  -webkit-text-fill-color:#000000 !important;
-
-  border:2px solid #a16207 !important;
-  box-shadow:none !important;
-  text-shadow:none !important;
-  filter:none !important;
-}
-
-.compareTree .level-1.active > .dasha-header *,
-.compareTree .level-1.active > .dasha-header b,
-.compareTree .level-1.active > .dasha-header span{
-  color:#000000 !important;
-  -webkit-text-fill-color:#000000 !important;
-}
-
-
-.compareTree .level-1.active > .dasha-header *,
-.compareTree .level-1.active > .dasha-header b,
-.compareTree .level-1.active > .dasha-header span{
-  color:#000000 !important;
+  background:#eab308;
+  color:#000000;
+  border:2px solid #a16207;
+  box-shadow:none;
+  text-shadow:none;
+  filter:none;
 }
 
 
@@ -537,26 +500,6 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 
 
 
-
-
-
-
-
-
-
-
-/* ===== ANDROID TAP / ACTIVE STATE OVERRIDE ===== */
-.active.level-1 > .dasha-header:active,
-.active.level-1 > .dasha-header:focus{
-  color:#000000 !important;
-  -webkit-text-fill-color:#000000 !important;
-}
-
-.active.level-1 > .dasha-header:active *,
-.active.level-1 > .dasha-header:focus *{
-  color:#000000 !important;
-  -webkit-text-fill-color:#000000 !important;
-}
 
 
 
@@ -650,28 +593,54 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 
 <div style="margin-bottom:10px">
 
-  <label>Yogini Pivot:</label>
-  <select id="yoginiPivot" onchange="buildYogini()">
-    <option value="Lagna">Lagna</option>
-    <option value="Surya">Surya</option>
-    <option value="Chandra" selected>Chandra</option>
-    <option value="Mangala">Mangala</option>
-    <option value="Budha">Budha</option>
-    <option value="Jupiter">Jupiter</option>
-    <option value="Venus">Venus</option>
-    <option value="Saturn">Saturn</option>
-    <option value="Rahu">Rahu</option>
-    <option value="Ketu">Ketu</option>
-  </select>
 
-  <label style="margin-left:12px">Show Till:</label>
-  <select id="yoginiShowTill" onchange="buildYogini()">
-    <option value="1">Level 1</option>
-    <option value="2" selected>Level 2</option>
-    <option value="3">Level 3</option>
-    <option value="4">Level 4</option>
-    <option value="5">Level 5</option>
-  </select>
+
+
+<label>Yogini Show Till:</label>
+<select id="yoginiShowTill" onchange="buildYogini()">
+  <option value="1">Yogini Dasha</option>
+  <option value="2" selected>Bhukti</option>
+  <option value="3">Antara</option>
+  <option value="4">Sookshma</option>
+  <option value="5">Prana</option>
+</select>
+
+
+
+
+
+
+
+  <label>Yogini Pivot:</label>
+  
+  <select id="yoginiPivot" onchange="buildYogini()">
+  <!-- PLANETS -->
+  <option value="Chandra" selected>Chandra</option>
+  <option value="Lagna">Lagna</option>
+  <option value="Surya">Surya</option>
+  <option value="Mangala">Mangala</option>
+  <option value="Budha">Budha</option>
+  <option value="Jupiter">Jupiter</option>
+  <option value="Venus">Venus</option>
+  <option value="Saturn">Saturn</option>
+  <option value="Rahu">Rahu</option>
+  <option value="Ketu">Ketu</option>
+
+  <!-- CUSPS (REAL SWISS CSL) -->
+  <option value="CSL1">CSL-1</option>
+  <option value="CSL2">CSL-2</option>
+  <option value="CSL3">CSL-3</option>
+  <option value="CSL4">CSL-4</option>
+  <option value="CSL5">CSL-5</option>
+  <option value="CSL6">CSL-6</option>
+  <option value="CSL7">CSL-7</option>
+  <option value="CSL8">CSL-8</option>
+  <option value="CSL9">CSL-9</option>
+  <option value="CSL10">CSL-10</option>
+  <option value="CSL11">CSL-11</option>
+  <option value="CSL12">CSL-12</option>
+</select>
+
 
 </div>
 
@@ -825,6 +794,24 @@ function levelPrefix(level, start, end){
 }
 
 const MS_YEAR = 365.25*24*60*60*1000;
+
+
+
+// =================================================
+// YOGINI DASHA — CONSTANT ORDER (MUST BE EARLY)
+// =================================================
+const YOGINI_ORDER = [
+  { name:"Mangala", lord:"Chandra", years:1 },
+  { name:"Pingala", lord:"Surya", years:2 },
+  { name:"Dhanya", lord:"Jupiter", years:3 },
+  { name:"Bhramari", lord:"Mangala", years:4 },
+  { name:"Bhadrika", lord:"Budha", years:5 },
+  { name:"Ulka", lord:"Saturn", years:6 },
+  { name:"Sidda", lord:"Venus", years:7 },
+  { name:"Sankata", lord:"Rahu+Ketu", years:8 }
+];
+
+
 
 
 let lastExpanded=false;
@@ -1187,7 +1174,7 @@ function findEvent(i){
 
 /* ===== CLEAR ===== */
 function clearAll(){
-  if(!confirm("This will clear the entire app. Continue?"))return;
+
   tree.innerHTML="";
   document.querySelectorAll(".active").forEach(a=>a.classList.remove("active"));
   document.querySelectorAll(".small").forEach(s=>s.textContent="");
@@ -1426,6 +1413,33 @@ function loadAyanamshaFromSwiss(){
 
   // Direct usage (NO OFFSETS)
   BODY_DEGREE_MAP = { ...RAW_DEGREE_MAP };
+  
+  
+  // ===============================
+// LOAD PLANETS + LAGNA
+// ===============================
+BODY_DEGREE_MAP = { ...RAW_DEGREE_MAP };
+
+			// ===============================
+			// LOAD REAL HOUSE CUSPS (CSL)
+			// FROM SELECTED AYANAMSHA BLOCK
+			// ===============================
+			const cuspBlock = ayaBlock.cusps;
+
+			if(cuspBlock){
+			  for(let i = 1; i <= 12; i++){
+				const deg = cuspBlock[String(i)];
+				if(deg != null){
+				  BODY_DEGREE_MAP["CSL" + i] = normalizeDeg(deg);
+				}
+			  }
+			}
+
+  
+  
+  
+  
+  
 }
 
 
@@ -2032,21 +2046,6 @@ setYoginiCmpToday();
 
 
 <script>
-/* =================================================
-   YOGINI DASHA — CLASSICAL (MOON NAKSHATRA ONLY)
-   TOTAL = 108 YEARS (36 × 3)
-   ================================================= */
-
-const YOGINI_ORDER = [
-  { name:"Mangala", lord:"Chandra", years:1 },
-  { name:"Pingala", lord:"Surya", years:2 },
-  { name:"Dhanya", lord:"Jupiter", years:3 },
-  { name:"Bhramari", lord:"Mangala", years:4 },
-  { name:"Bhadrika", lord:"Budha", years:5 },
-  { name:"Ulka", lord:"Saturn", years:6 },
-  { name:"Sidda", lord:"Venus", years:7 },
-  { name:"Sankata", lord:"Rahu+Ketu", years:8 }
-];
 
 
 
@@ -2413,6 +2412,55 @@ function autoRefreshAll(){
   rebuildYoginiComparator();
   updateNativeAge();
 }
+
+
+
+
+<script>
+/* =========================================
+   GLOBAL CURRENT TRANSIT DATE FIX (FINAL)
+   ========================================= */
+
+function fillAllCurrentTransitDates(){
+  const today = new Date().toISOString().slice(0,10);
+
+  const ids = [
+    "ed0",                 // Main Event Analyzer
+    "cmpEventDate",        // Vimshottari Comparator
+    "yoginiAnalyzerDate",  // Yogini Analyzer
+    "yogCmpEventDate"      // Yogini Comparator
+  ];
+
+  ids.forEach(id=>{
+    const el = document.getElementById(id);
+    if(el && !el.value){
+      el.value = today;
+    }
+  });
+}
+
+/* Fill on first load */
+document.addEventListener("DOMContentLoaded", fillAllCurrentTransitDates);
+
+/* Fill after Swiss load */
+const _oldLoadSwiss = loadSwiss;
+loadSwiss = function(){
+  _oldLoadSwiss();
+  setTimeout(fillAllCurrentTransitDates, 50);
+};
+
+/* Fill after Clear All */
+const _oldClearAll = clearAll;
+clearAll = function(){
+  _oldClearAll();
+  setTimeout(fillAllCurrentTransitDates, 0);
+};
+</script>
+
+
+
+
+<script>
 
 birthDate.addEventListener("change", autoRefreshAll);
 startPlanet.addEventListener("change", autoRefreshAll);
