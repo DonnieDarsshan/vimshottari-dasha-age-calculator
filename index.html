@@ -338,7 +338,74 @@ hr{border:0;border-top:1px solid #ca8a04;margin:16px 0}
 
 
 
+
+
+
+
+
+
 <hr>
+
+<h3>Vimshottari + Yogini Dasha Comparator</h3>
+
+<div style="margin-bottom:10px">
+  <button onclick="setVYToday()">Current Transit</button>
+  <input type="date" id="vyEventDate">
+  <button onclick="findVYTransit()">Find</button>
+  <span id="vyEventResult" class="small"></span>
+</div>
+
+<div id="vyCompareWrap" style="display:flex;gap:16px">
+
+  <!-- VIMSHOTTARI SIDE -->
+  <div class="compareBox">
+    <h4 style="margin-top:0">Vimshottari</h4>
+
+    <select id="vyVimAnchor" onchange="buildVYVimTree()">
+      <option value="Lagna">Lagna</option>
+      <option value="Chandra" selected>Chandra</option>
+      <option>Surya</option>
+      <option>Mangala</option>
+      <option>Budha</option>
+      <option>Jupiter</option>
+      <option>Venus</option>
+      <option>Saturn</option>
+      <option>Rahu</option>
+      <option>Ketu</option>
+    </select>
+
+    <div id="vyVimTree" class="compareTree"></div>
+  </div>
+
+  <!-- YOGINI SIDE -->
+  <div class="compareBox">
+    <h4 style="margin-top:0">Yogini</h4>
+
+    <select id="vyYogAnchor" onchange="buildVYYogTree()">
+      <option value="Lagna">Lagna</option>
+      <option value="Chandra" selected>Chandra</option>
+      <option>Surya</option>
+      <option>Mangala</option>
+      <option>Budha</option>
+      <option>Jupiter</option>
+      <option>Venus</option>
+      <option>Saturn</option>
+      <option>Rahu</option>
+      <option>Ketu</option>
+    </select>
+
+    <div id="vyYogTree" class="compareTree yogini"></div>
+  </div>
+
+</div>
+
+
+
+
+
+<hr>
+
+
 
 <h3>Vimshottari Dasha Comparator</h3>
 
@@ -832,6 +899,40 @@ function rotate(p){let i=ORDER.indexOf(p);return ORDER.slice(i).concat(ORDER.sli
 
 
 
+
+
+
+
+
+/* =========================================
+   GLOBAL CURRENT TRANSIT DATE FIX (FINAL)
+   ========================================= */
+
+function fillAllCurrentTransitDates(){
+  const today = new Date().toISOString().slice(0,10);
+
+  const ids = [
+  "ed0",                 // Main Event Analyzer
+  "cmpEventDate",        // Vimshottari Comparator
+  "vyEventDate",         // ✅ Vimshottari + Yogini Comparator
+  "yoginiAnalyzerDate",  // Yogini Analyzer
+  "yogCmpEventDate"      // Yogini Comparator
+];
+
+
+
+  ids.forEach(id=>{
+    const el = document.getElementById(id);
+    if(el && !el.value){
+      el.value = today;
+    }
+  });
+}
+
+
+
+
+
 document.getElementById("cosmeticBirthdate").onchange = () => {
   COSMETIC_BIRTHDATE = document.getElementById("cosmeticBirthdate").checked;
   autoRefreshAll();
@@ -963,33 +1064,68 @@ function genLevel(level,start,planet,yrs,max){
   return arr;
 }
 
+
+
+
+
+
+
+
+
+
 function generate(){
   tree.innerHTML="";
   updateNativeAge();
   if(!birthDate.value) return;
 
-	if(!dashaStartDate.value){
-	  dashaStartDate.value = birthDate.value;
-	}
-  let max=+showTill.value;
-  let cycles=repeatCycle.checked?2:1;
-  let cur=new Date(dashaStartDate.value);
-  for(let c=0;c<cycles;c++){
-	rotate(startPlanet.value).forEach(p=>{
-	  let end=addYears(cur,YEARS[p]);
-	  tree.appendChild(render({
-		level:1,planet:p,start:new Date(cur),end:new Date(end),
-		children:genLevel(2,cur,p,YEARS[p],max)
-	  }));
-	  cur=end;
-	});
+  if(!dashaStartDate.value){
+    dashaStartDate.value = birthDate.value;
   }
-	setManualMode(true);
 
+  let max = +showTill.value;
+  let cycles = repeatCycle.checked ? 2 : 1;
+  let cur = new Date(dashaStartDate.value);
 
+  for(let c=0;c<cycles;c++){
+    rotate(startPlanet.value).forEach(p=>{
+      let end = addYears(cur, YEARS[p]);
 
+      tree.appendChild(render({
+        level:1,
+        planet:p,
+        start:new Date(cur),
+        end:new Date(end),
+        children:genLevel(2,cur,p,YEARS[p],max)
+      }));
 
+      cur = end;
+    });
+  }
+
+  setManualMode(true);
+
+  /* ===============================
+     🔥 CRITICAL FIX (THE REAL ONE)
+     Build Vimshottari + Yogini HERE
+     =============================== */
+  if(BODY_DEGREE_MAP){
+    buildVYVimTree();
+    buildVYYogTree();
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function render(n){
   let w=document.createElement("div");
@@ -1543,6 +1679,25 @@ ayanamsha.onchange = () => {
     rebuildComparator();
     buildYogini();
     rebuildYoginiComparator();
+	autoRefreshAll(); // ← THIS IS WHAT WAS MISSING
+
+	
+	
+	
+	
+
+	
+	
+	
+	
+	
+	// 🔁 build combined comparator with Chandra defaults
+	if(vyVimAnchor) vyVimAnchor.value = "Chandra";
+	if(vyYogAnchor) vyYogAnchor.value = "Chandra";
+
+	
+	fillAllCurrentTransitDates();
+
   }
 
   updateNativeAge();
@@ -1562,53 +1717,28 @@ ayanamsha.onchange = () => {
 
 
 <script>
-/* =================================================
-   VIMSHOTTARI COMPARATOR — FULL 5 LEVEL TREE
-   (NO AGE, DATE ONLY)
-   ================================================= */
 
-function buildCompareTree(side){
 
-  if(!birthDate.value) return;
-if(!BODY_DEGREE_MAP || Object.keys(BODY_DEGREE_MAP).length === 0) return;
 
-  const anchor =
-	side === "left"
-	  ? compareLeftAnchor.value
-	  : compareRightAnchor.value;
 
-  const target =
-	side === "left"
-	  ? compareLeftTree
-	  : compareRightTree;
 
-  target.innerHTML = "";
 
-  let deg = BODY_DEGREE_MAP[anchor];
-  if(deg == null) return;
 
-  let lord = nakLord(deg);
-  let elapsed = dashaElapsedYears(deg);
 
-  let start = new Date(birthDate.value);
-  start = new Date(start.getTime() - elapsed * MS_YEAR);
 
-  rotate(lord).forEach(p=>{
-	let end = addYears(start, YEARS[p]);
 
-	target.appendChild(
-	  renderCompareNode({
-		level:1,
-		planet:p,
-		start:new Date(start),
-		end:new Date(end),
-		children:genCompareLevel(2,start,p,YEARS[p],+showTill.value)
-	  })
-	);
 
-	start = end;
-  });
-}
+
+
+
+
+
+
+
+
+
+
+
 
 function genCompareLevel(level,start,planet,yrs,max){
 if(level > max || max < 1) return [];
@@ -1723,6 +1853,54 @@ if(!document.getElementById("cmpHideAge")?.checked){
   w.appendChild(c);
   return w;
 }
+
+
+
+
+
+
+
+function buildCompareTree(side){
+
+  const anchor =
+    side === "left"
+      ? compareLeftAnchor.value
+      : compareRightAnchor.value;
+
+  const target =
+    side === "left"
+      ? compareLeftTree
+      : compareRightTree;
+
+  if(!birthDate.value || !BODY_DEGREE_MAP[anchor]) return;
+
+  target.innerHTML = "";
+
+  let deg = BODY_DEGREE_MAP[anchor];
+  let lord = nakLord(deg);
+  let elapsed = dashaElapsedYears(deg);
+
+  let start = new Date(birthDate.value);
+  start = new Date(start.getTime() - elapsed * MS_YEAR);
+
+  rotate(lord).forEach(p=>{
+    let end = addYears(start, YEARS[p]);
+
+    target.appendChild(
+      renderCompareNode({
+        level:1,
+        planet:p,
+        start:new Date(start),
+        end:new Date(end),
+        children:genCompareLevel(2,start,p,YEARS[p],+showTill.value)
+      })
+    );
+
+    start = end;
+  });
+}
+
+
 
 
 
@@ -1860,93 +2038,6 @@ function buildYoginiCompare(anchor, target){
   }
 }
 
-function genYoginiCompareLevel(level,start,yogini,yrs){
-  if(level > +yoginiShowTill.value) return [];
-
-  let arr = [];
-  let cur = new Date(start);
-
-  const startIndex = YOGINI_ORDER.findIndex(y => y.name === yogini.name);
-  const rotated = [
-    ...YOGINI_ORDER.slice(startIndex),
-    ...YOGINI_ORDER.slice(0, startIndex)
-  ];
-
-  rotated.forEach(y => {
-    let len = yrs * (y.years / 36);
-    let end = addYears(cur, len);
-
-    arr.push({
-      level,
-      name: y.name,
-      lord: y.lord,
-      start: new Date(cur),
-      end: new Date(end),
-      children: genYoginiCompareLevel(level + 1, cur, y, len)
-    });
-
-    cur = end;
-  });
-
-  return arr;
-}
-
-
-
-
-
-
-function renderYoginiCompareNode(n){
-
-  let w = document.createElement("div");
-  w.className = "dasha-node yogini level-" + n.level;
-
-  w.dataset.s = n.start;
-  w.dataset.e = n.end;
-  w.dataset.l = n.level;
-
-  let h = document.createElement("div");
-  h.className = "dasha-header";
-
-function fmt(d){
-
-  d = cosmeticStartDate(d);
-
-  if(yogCmpHideMonthDay.checked) return d.getFullYear();
-  if(yogCmpHideDates.checked)
-    return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
-  return d.toISOString().slice(0,10);
-}
-
-
-  let startAge = "";
-  let endAge   = "";
-
-  if(!document.getElementById("yogCmpHideAge")?.checked){
-    const birth = new Date(birthDate.value);
-    startAge = ` (${Math.floor((n.start - birth) / MS_YEAR)} years)`;
-    endAge   = ` (${Math.floor((n.end   - birth) / MS_YEAR)} years)`;
-  }
-
-  h.innerHTML =
-  `${levelPrefix(n.level,n.start,n.end)}` +
-  `<b>${n.name} { ${n.lord} }</b> | ` +
-  `${fmt(n.start)}${startAge} → ${fmt(n.end)}${endAge}`;
-
-
-  let c = document.createElement("div");
-  c.style.display = "none";
-  n.children.forEach(ch => c.appendChild(renderYoginiCompareNode(ch)));
-
-  h.onclick = () => {
-    w.classList.toggle("active");
-    c.style.display = w.classList.contains("active") ? "block" : "none";
-  };
-
-  w.appendChild(h);
-  w.appendChild(c);
-  return w;
-}
 
 
 
@@ -1959,11 +2050,21 @@ function fmt(d){
 
 
 
-document.addEventListener("DOMContentLoaded", ()=>{
-  rebuildYoginiComparator();
-  setYoginiCmpToday();
-  setYoginiAnalyzerToday();
-});
+
+
+
+
+
+
+
+
+
+
+
+
+
+birthDate.addEventListener("change", autoRefreshAll);
+
 setCmpToday();
 
 
@@ -2161,10 +2262,9 @@ let elapsedYears =
 
 
 document.addEventListener("DOMContentLoaded", ()=>{
-  if(birthDate.value){
-    buildYogini();
-  }
+  fillAllCurrentTransitDates();
 });
+
 
 
 function setYoginiAnalyzerToday(){
@@ -2403,57 +2503,379 @@ function findYoginiEvent(){
 /* =====================================================
    SAFE AUTO-REFRESH (NO EVENT OVERRIDES)
    ===================================================== */
-
 function autoRefreshAll(){
   if(!birthDate.value) return;
+
   generate();
   rebuildComparator();
   buildYogini();
   rebuildYoginiComparator();
   updateNativeAge();
+
+  /* ===============================
+     FORCE BUILD: VIMSHOTTARI + YOGINI
+     (NO USER INTERACTION REQUIRED)
+     =============================== */
+
+  if(BODY_DEGREE_MAP){
+
+    // set defaults only if empty
+    if(vyVimAnchor && !vyVimAnchor.value){
+      vyVimAnchor.value = "Chandra";
+    }
+    if(vyYogAnchor && !vyYogAnchor.value){
+      vyYogAnchor.value = "Chandra";
+    }
+
+    // 🔥 ALWAYS BUILD — this was missing
+    buildVYVimTree();
+    buildVYYogTree();
+  }
+
+  fillAllCurrentTransitDates();
 }
 
+
+
+
+
+
+
+
+
+
+function genYoginiCompareLevel(level,start,yogini,yrs){
+  if(level > +yoginiShowTill.value) return [];
+
+  let arr = [];
+  let cur = new Date(start);
+
+  const startIndex = YOGINI_ORDER.findIndex(y => y.name === yogini.name);
+  const rotated = [
+    ...YOGINI_ORDER.slice(startIndex),
+    ...YOGINI_ORDER.slice(0, startIndex)
+  ];
+
+  rotated.forEach(y => {
+    let len = yrs * (y.years / 36);
+    let end = addYears(cur, len);
+
+    arr.push({
+      level,
+      name: y.name,
+      lord: y.lord,
+      start: new Date(cur),
+      end: new Date(end),
+      children: genYoginiCompareLevel(level + 1, cur, y, len)
+    });
+
+    cur = end;
+  });
+
+  return arr;
+}
+
+
+
+
+
+
+
+
+
+/* =====================================================
+   VIMSHOTTARI + YOGINI COMBINED COMPARATOR
+   ===================================================== */
+
+function setVYToday(){
+  document.getElementById("vyEventDate").value =
+    new Date().toISOString().slice(0,10);
+}
+
+
+
+
+
+
+
+
+
+
+function buildVYVimTree(){
+  if(!birthDate.value || !BODY_DEGREE_MAP) return;
+
+  vyVimTree.innerHTML = "";
+
+  const anchor = vyVimAnchor.value;
+  const deg = BODY_DEGREE_MAP[anchor];
+  if(deg == null) return;
+
+  const lord = nakLord(deg);
+  const elapsed = dashaElapsedYears(deg);
+
+  let start = new Date(birthDate.value);
+  start = new Date(start.getTime() - elapsed * MS_YEAR);
+
+  rotate(lord).forEach(p=>{
+    let end = addYears(start, YEARS[p]);
+
+    const node = renderCompareNode({
+      level:1,
+      planet:p,
+      start:new Date(start),
+      end:new Date(end),
+      children:genCompareLevel(2,start,p,YEARS[p],+showTill.value)
+    });
+
+    /* 🔒 DEFAULT STATE — FULLY COLLAPSED (LIKE OTHER TABLES) */
+    node.querySelectorAll(".dasha-node > div:nth-child(2)")
+        .forEach(d => d.style.display = "none");
+    node.querySelectorAll(".dasha-node")
+        .forEach(n => n.classList.remove("active"));
+
+    vyVimTree.appendChild(node);
+    start = end;
+  });
+}
+
+
+
+
+
+
+
+
+
+function renderYoginiCompareNode(n){
+
+  let w = document.createElement("div");
+  w.className = "dasha-node yogini level-" + n.level;
+
+  w.dataset.s = n.start;
+  w.dataset.e = n.end;
+  w.dataset.l = n.level;
+
+  let h = document.createElement("div");
+  h.className = "dasha-header";
+
+  function fmt(d){
+
+    d = cosmeticStartDate(d);
+
+    if(document.getElementById("yogCmpHideMonthDay")?.checked){
+      return d.getFullYear();
+    }
+
+    if(document.getElementById("yogCmpHideDates")?.checked){
+      return d.getFullYear() + "-" +
+        String(d.getMonth()+1).padStart(2,"0");
+    }
+
+    return d.toISOString().slice(0,10);
+  }
+
+  let startAge = "";
+  let endAge   = "";
+
+  if(!document.getElementById("yogCmpHideAge")?.checked){
+    const birth = new Date(birthDate.value);
+    startAge = ` (${Math.floor((n.start - birth) / MS_YEAR)} years)`;
+    endAge   = ` (${Math.floor((n.end   - birth) / MS_YEAR)} years)`;
+  }
+
+  h.innerHTML =
+    `${levelPrefix(n.level,n.start,n.end)}` +
+    `<b>${n.name} { ${n.lord} }</b> | ` +
+    `${fmt(n.start)}${startAge} → ${fmt(n.end)}${endAge}`;
+
+  let c = document.createElement("div");
+  c.style.display = "none";
+  n.children.forEach(ch => c.appendChild(renderYoginiCompareNode(ch)));
+
+  h.onclick = () => {
+    w.classList.toggle("active");
+    c.style.display = w.classList.contains("active") ? "block" : "none";
+  };
+
+  w.appendChild(h);
+  w.appendChild(c);
+  return w;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function buildVYYogTree(){
+  if(!birthDate.value || !BODY_DEGREE_MAP) return;
+
+  vyYogTree.innerHTML = "";
+
+  const anchor = vyYogAnchor.value;
+  const deg = BODY_DEGREE_MAP[anchor];
+  if(deg == null) return;
+
+  let nak = Math.floor(deg / 13.3333333333) + 1;
+  let idx = (nak + 3) % 8;
+  if(idx === 0) idx = 8;
+  idx--;
+
+  const birth = new Date(birthDate.value);
+  const first = YOGINI_ORDER[idx];
+
+  const nakStart = (nak - 1) * 13.3333333333;
+  let elapsedDeg = deg - nakStart;
+  if(elapsedDeg < 0) elapsedDeg += 360;
+
+  let elapsedYears =
+    (elapsedDeg / 13.3333333333) * first.years;
+
+  let cur = new Date(birth.getTime() - elapsedYears * MS_YEAR);
+
+  for(let cycle=0; cycle<3; cycle++){
+    for(let i=0;i<8;i++){
+      let y = YOGINI_ORDER[(idx + i) % 8];
+      let end = addYears(cur, y.years);
+
+      const node = renderYoginiCompareNode({
+        level:1,
+        name:y.name,
+        lord:y.lord,
+        start:new Date(cur),
+        end:new Date(end),
+        years:y.years,
+        children:genYoginiCompareLevel(2,cur,y,y.years)
+      });
+
+      /* 🔒 DEFAULT STATE — FULLY COLLAPSED */
+      node.querySelectorAll(".dasha-node > div:nth-child(2)")
+          .forEach(d => d.style.display = "none");
+      node.querySelectorAll(".dasha-node")
+          .forEach(n => n.classList.remove("active"));
+
+      vyYogTree.appendChild(node);
+      cur = end;
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+function findVYTransit(){
+
+  const val = vyEventDate.value;
+  if(!val) return;
+  const d = new Date(val);
+
+  // clear previous
+  document
+    .querySelectorAll("#vyCompareWrap .active")
+    .forEach(a=>a.classList.remove("active"));
+
+  document
+    .querySelectorAll("#vyCompareWrap .dasha-node > div:nth-child(2)")
+    .forEach(n=>n.style.display="none");
+
+  // Vimshottari
+  const vimNodes = [...vyVimTree.querySelectorAll(".dasha-node")]
+    .filter(n => d >= new Date(n.dataset.s) && d < new Date(n.dataset.e))
+    .sort((a,b)=>a.dataset.l - b.dataset.l);
+
+  vimNodes.forEach(n=>{
+    n.classList.add("active");
+    if(n.children[1]) n.children[1].style.display="block";
+  });
+
+  // Yogini
+  const yogNodes = [...vyYogTree.querySelectorAll(".dasha-node")]
+    .filter(n => d >= new Date(n.dataset.s) && d < new Date(n.dataset.e))
+    .sort((a,b)=>a.dataset.l - b.dataset.l);
+
+  yogNodes.forEach(n=>{
+    n.classList.add("active");
+    if(n.children[1]) n.children[1].style.display="block";
+  });
+
+  vyEventResult.textContent =
+    "Vimshottari: " +
+    vimNodes.map(n=>n.querySelector("b").textContent.split(" – ").pop()).join(" → ")
+    +
+    " | Yogini: " +
+    yogNodes.map(n=>n.querySelector("b").textContent).join(" → ");
+}
+
+</script>
 
 
 
 <script>
-/* =========================================
-   GLOBAL CURRENT TRANSIT DATE FIX (FINAL)
-   ========================================= */
 
-function fillAllCurrentTransitDates(){
-  const today = new Date().toISOString().slice(0,10);
 
-  const ids = [
-    "ed0",                 // Main Event Analyzer
-    "cmpEventDate",        // Vimshottari Comparator
-    "yoginiAnalyzerDate",  // Yogini Analyzer
-    "yogCmpEventDate"      // Yogini Comparator
-  ];
 
-  ids.forEach(id=>{
-    const el = document.getElementById(id);
-    if(el && !el.value){
-      el.value = today;
-    }
-  });
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* Fill on first load */
 document.addEventListener("DOMContentLoaded", fillAllCurrentTransitDates);
 
-/* Fill after Swiss load */
-const _oldLoadSwiss = loadSwiss;
-loadSwiss = function(){
-  _oldLoadSwiss();
-  setTimeout(fillAllCurrentTransitDates, 50);
-};
 
 /* Fill after Clear All */
 const _oldClearAll = clearAll;
 clearAll = function(){
   _oldClearAll();
-  setTimeout(fillAllCurrentTransitDates, 0);
+  setTimeout(()=>{
+    fillAllCurrentTransitDates();
+    if(birthDate.value && BODY_DEGREE_MAP){
+      autoRefreshAll();
+    }
+  },0);
 };
 </script>
 
@@ -2497,3 +2919,5 @@ yogCompareRightAnchor.addEventListener("change", autoRefreshAll);
 
 </body>
 </html>
+
+
